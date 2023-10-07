@@ -38,14 +38,14 @@ about:
 
 # ========== Site ========== #
 # title of the site (good for SEO)
-SEO_title: Chino's Studio
+SEO_title: Mars Studio
 # keywords for site (good for SEO)
 SEO_keywords:
   - hexo
   - 'hexo-theme'
   - 'hexo-blog'
 # main title shown in header image
-main_title: Chino's Studio
+main_title: Mars Studio
 # subtitle
 subtitle: 取法乎上得其中，取法乎中得其下
 # site haeder image
