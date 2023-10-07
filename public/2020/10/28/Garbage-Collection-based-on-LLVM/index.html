@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="en">
+    <!-- title -->
+
+
+
+
+<!-- keywords -->
+
+
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" >
+    <meta name="author" content="Chino Mars">
+    <meta name="renderer" content="webkit">
+    <meta name="copyright" content="Chino Mars">
+    
+    <meta name="keywords" content="hexo,hexo-theme,hexo-blog">
+    
+    <meta name="description" content="An untypical developer">
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <title>Garbage Collection with LLVM · Chino&#39;s Workspace</title>
+    <style type="text/css">
+    @font-face {
+        font-family: 'Oswald-Regular';
+        src: url("/font/Oswald-Regular.ttf");
+    }
+
+    body {
+        margin: 0;
+    }
+
+    header,
+    footer,
+    .back-top,
+    .sidebar,
+    .container,
+    .site-intro-meta,
+    .toc-wrapper {
+        display: none;
+    }
+
+    .site-intro {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        /* height: 50vh; */
+        overflow: hidden;
+    }
+
+    .site-intro-placeholder {
+        position: absolute;
+        z-index: -2;
+        top: 0;
+        left: 0;
+        width: calc(100% + 300px);
+        height: 100%;
+        background: repeating-linear-gradient(-45deg, #444 0, #444 80px, #333 80px, #333 160px);
+        background-position: center center;
+        transform: translate3d(-226px, 0, 0);
+        animation: gradient-move 2.5s ease-out 0s infinite;
+    }
+
+    @keyframes gradient-move {
+        0% {
+            transform: translate3d(-226px, 0, 0);
+        }
+        100% {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+</style>
+
+    <link rel="preload" href= "/css/style.css?v=20180824" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <link rel="stylesheet" href= "/css/mobile.css?v=20180824" media="(max-width: 980px)">
+    
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    
+    <!-- /*! loadCSS. [c]2017 Filament Group, Inc. MIT License */
+/* This file is meant as a standalone workflow for
+- testing support for link[rel=preload]
+- enabling async CSS loading in browsers that do not support rel=preload
+- applying rel preload css once loaded, whether supported or not.
+*/ -->
+<script>
+(function( w ){
+	"use strict";
+	// rel=preload support test
+	if( !w.loadCSS ){
+		w.loadCSS = function(){};
+	}
+	// define on the loadCSS obj
+	var rp = loadCSS.relpreload = {};
+	// rel=preload feature support test
+	// runs once and returns a function for compat purposes
+	rp.support = (function(){
+		var ret;
+		try {
+			ret = w.document.createElement( "link" ).relList.supports( "preload" );
+		} catch (e) {
+			ret = false;
+		}
+		return function(){
+			return ret;
+		};
+	})();
+
+	// if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+	// then change that media back to its intended value on load
+	rp.bindMediaToggle = function( link ){
+		// remember existing media attr for ultimate state, or default to 'all'
+		var finalMedia = link.media || "all";
+
+		function enableStylesheet(){
+			link.media = finalMedia;
+		}
+
+		// bind load handlers to enable media
+		if( link.addEventListener ){
+			link.addEventListener( "load", enableStylesheet );
+		} else if( link.attachEvent ){
+			link.attachEvent( "onload", enableStylesheet );
+		}
+
+		// Set rel and non-applicable media type to start an async request
+		// note: timeout allows this to happen async to let rendering continue in IE
+		setTimeout(function(){
+			link.rel = "stylesheet";
+			link.media = "only x";
+		});
+		// also enable media after 3 seconds,
+		// which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+		setTimeout( enableStylesheet, 3000 );
+	};
+
+	// loop through link elements in DOM
+	rp.poly = function(){
+		// double check this to prevent external calls from running
+		if( rp.support() ){
+			return;
+		}
+		var links = w.document.getElementsByTagName( "link" );
+		for( var i = 0; i < links.length; i++ ){
+			var link = links[ i ];
+			// qualify links to those with rel=preload and as=style attrs
+			if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+				// prevent rerunning on link
+				link.setAttribute( "data-loadcss", true );
+				// bind listeners to toggle media back
+				rp.bindMediaToggle( link );
+			}
+		}
+	};
+
+	// if unsupported, run the polyfill
+	if( !rp.support() ){
+		// run once at least
+		rp.poly();
+
+		// rerun poly on an interval until onload
+		var run = w.setInterval( rp.poly, 500 );
+		if( w.addEventListener ){
+			w.addEventListener( "load", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		} else if( w.attachEvent ){
+			w.attachEvent( "onload", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		}
+	}
+
+
+	// commonjs
+	if( typeof exports !== "undefined" ){
+		exports.loadCSS = loadCSS;
+	}
+	else {
+		w.loadCSS = loadCSS;
+	}
+}( typeof global !== "undefined" ? global : this ) );
+</script>
+
+    <link rel="icon" href= "/assets/favicon.ico" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js" as="script" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" as="script" />
+    <link rel="preload" href="/scripts/main.js" as="script" />
+    <link rel="preload" as="font" href="/font/Oswald-Regular.ttf" crossorigin>
+    <link rel="preload" as="font" href="https://at.alicdn.com/t/font_327081_1dta1rlogw17zaor.woff" crossorigin>
+    
+        <!-- algolia -->
+        <script>
+            
+            var hits = JSON.parse('{"per_page":10}')
+            var labels = JSON.parse('{"input_placeholder":"Search for Posts","hits_empty":"We did not find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}')
+
+            var algolia = {
+                applicationID: 'XWV2HSZRUC',
+                apiKey: 'e4b6bee3d15bf2f01c6b8a02a7ff1be1',
+                indexName: 'personal-blog',
+                hits: hits,
+                labels: labels
+            }
+        </script>
+    
+    <!-- fancybox -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script>
+    <!-- 百度统计  -->
+    
+    <!-- 谷歌统计  -->
+    
+<meta name="generator" content="Hexo 4.2.0"><link rel="alternate" href="/atom.xml" title="Chino's Studio" type="application/atom+xml">
+</head>
+
+    
+        <body class="post-body">
+    
+    
+<header class="header">
+
+    <div class="read-progress"></div>
+    <div class="header-sidebar-menu">&#xe775;</div>
+    <!-- post页的toggle banner  -->
+    
+    <div class="banner">
+            <div class="blog-title">
+                <a href="/" >Chino&#39;s Workspace</a>
+            </div>
+            <div class="post-title">
+                <a href="#" class="post-name">Garbage Collection with LLVM</a>
+            </div>
+    </div>
+    
+    <a class="home-link" href=/>Chino's Workspace</a>
+</header>
+    <div class="wrapper">
+        <div class="site-intro" style="
+
+
+
+
+
+
+
+height:50vh;
+">
+    
+    <!-- 主页  -->
+    
+    
+    <!-- 404页  -->
+            
+    <div class="site-intro-placeholder"></div>
+    <div class="site-intro-img" style="background-image: url(/intro/post-bg.jpg)"></div>
+    <div class="site-intro-meta">
+        <!-- 标题  -->
+        <h1 class="intro-title">
+            <!-- 主页  -->
+            
+            Garbage Collection with LLVM
+            <!-- 404 -->
+            
+        </h1>
+        <!-- 副标题 -->
+        <p class="intro-subtitle">
+            <!-- 主页副标题  -->
+            
+            
+            <!-- 404 -->
+            
+        </p>
+        <!-- 文章页meta -->
+        
+            <div class="post-intros">
+                <!-- 文章页标签  -->
+                
+                    <div class= post-intro-tags >
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "Compiler">Compiler</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "Garbage Collection">Garbage Collection</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "LLVM">LLVM</a>
+    
+</div>
+                
+                
+                    <div class="post-intro-read">
+                        <span>Word count: <span class="post-count word-count">7.7k</span>Reading time: <span class="post-count reading-time">41 min</span></span>
+                    </div>
+                
+                <div class="post-intro-meta">
+                    <span class="post-intro-calander iconfont-archer">&#xe676;</span>
+                    <span class="post-intro-time">2020/10/28</span>
+                    
+                    <span id="busuanzi_container_page_pv" class="busuanzi-pv">
+                        <span class="iconfont-archer">&#xe602;</span>
+                        <span id="busuanzi_value_page_pv"></span>
+                    </span>
+                    
+                    <span class="shareWrapper">
+                        <span class="iconfont-archer shareIcon">&#xe71d;</span>
+                        <span class="shareText">Share</span>
+                        <ul class="shareList">
+                            <li class="iconfont-archer share-qr" data-type="qr">&#xe75b;
+                                <div class="share-qrcode"></div>
+                            </li>
+                            <li class="iconfont-archer" data-type="weibo">&#xe619;</li>
+                            <li class="iconfont-archer" data-type="qzone">&#xe62e;</li>
+                            <li class="iconfont-archer" data-type="twitter">&#xe634;</li>
+                            <li class="iconfont-archer" data-type="facebook">&#xe67a;</li>
+                        </ul>
+                    </span>
+                </div>
+            </div>
+        
+    </div>
+</div>
+        <script>
+ 
+  // get user agent
+  var browser = {
+    versions: function () {
+      var u = window.navigator.userAgent;
+      return {
+        userAgent: u,
+        trident: u.indexOf('Trident') > -1, //IE内核
+        presto: u.indexOf('Presto') > -1, //opera内核
+        webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+        gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核
+        mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+        ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+        android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或者uc浏览器
+        iPhone: u.indexOf('iPhone') > -1 || u.indexOf('Mac') > -1, //是否为iPhone或者安卓QQ浏览器
+        iPad: u.indexOf('iPad') > -1, //是否为iPad
+        webApp: u.indexOf('Safari') == -1, //是否为web应用程序，没有头部与底部
+        weixin: u.indexOf('MicroMessenger') == -1, //是否为微信浏览器
+        uc: u.indexOf('UCBrowser') > -1 //是否为android下的UC浏览器
+      };
+    }()
+  }
+  console.log("userAgent:" + browser.versions.userAgent);
+
+  // callback
+  function fontLoaded() {
+    console.log('font loaded');
+    if (document.getElementsByClassName('site-intro-meta')) {
+      document.getElementsByClassName('intro-title')[0].classList.add('intro-fade-in');
+      document.getElementsByClassName('intro-subtitle')[0].classList.add('intro-fade-in');
+      var postIntros = document.getElementsByClassName('post-intros')[0]
+      if (postIntros) {
+        postIntros.classList.add('post-fade-in');
+      }
+    }
+  }
+
+  // UC不支持跨域，所以直接显示
+  function asyncCb(){
+    if (browser.versions.uc) {
+      console.log("UCBrowser");
+      fontLoaded();
+    } else {
+      WebFont.load({
+        custom: {
+          families: ['Oswald-Regular']
+        },
+        loading: function () {  //所有字体开始加载
+          // console.log('loading');
+        },
+        active: function () {  //所有字体已渲染
+          fontLoaded();
+        },
+        inactive: function () { //字体预加载失败，无效字体或浏览器不支持加载
+          console.log('inactive: timeout');
+          fontLoaded();
+        },
+        timeout: 5000 // Set the timeout to two seconds
+      });
+    }
+  }
+
+  function asyncErr(){
+    console.warn('script load from CDN failed, will load local script')
+  }
+
+  // load webfont-loader async, and add callback function
+  function async(u, cb, err) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (cb) { o.addEventListener('load', function (e) { cb(null, e); }, false); }
+    if (err) { o.addEventListener('error', function (e) { err(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+
+  var asyncLoadWithFallBack = function(arr, success, reject) {
+      var currReject = function(){
+        reject()
+        arr.shift()
+        if(arr.length)
+          async(arr[0], success, currReject)
+        }
+
+      async(arr[0], success, currReject)
+  }
+
+  asyncLoadWithFallBack([
+    "https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js", 
+    "https://cdn.bootcss.com/webfont/1.6.28/webfontloader.js",
+    "/lib/webfontloader.min.js"
+  ], asyncCb, asyncErr)
+</script>        
+        <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
+        <div class="container container-unloaded">
+            <main class="main post-page">
+    <article class="article-entry">
+        <h2 id="Abstract"><a href="#Abstract" class="headerlink" title="Abstract"></a>Abstract</h2><p><strong>TRANSLATION:</strong> 本文内容主要包括如何在一个支持GC的语言编译器中集成LLVM。<strong>需要注意的是，LLVM本身并不提供垃圾回收器。</strong>用户必须先开发一个垃圾回收器。</p>
+<p><strong>ORIGIN:</strong> This document covers how to integrate LLVM into a compiler for a language which supports garbage collection. <strong>Note that LLVM itself does not provide a garbage collector.</strong> You must provide your own.</p>
+<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><p><strong>TRANSLATION:</strong> 第一步，我们需要选择一个收集器的收集策略。LLVM内置了一些收集策略，用户也可以自定义一个收集策略，以插件形式集成到LLVM中。需要注意的是，收集策略描述了LLVM如何生成能够与你的收集器和运行时相适配的代码，而非收集器本身。</p>
+<p><strong>ORIGIN:</strong> First, you should pick a collector strategy. LLVM includes a number of built in ones, but you can also implement a loadable plugin with a custom definition. Note that the collector strategy is a description of how LLVM should generate code such that it interacts with your collector and runtime, not a description of the collector itself.</p>
+<p><strong>TRANSLATION:</strong> 接下来，把即将生成的代码标记为你所选择的收集器策略。例如在c++代码中，我们可以调用：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">F.setGC(&lt;collector description name&gt;);</span><br></pre></td></tr></table></figure>
+
+<p>对应的IR生成将会表示为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">define void @foo() gc &quot;&lt;collector description name&gt;&quot; &#123; ... &#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>ORIGIN:</strong> Next, mark your generated functions as using your chosen collector strategy. From c++, you can call:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">F.setGC(&lt;collector description name&gt;);</span><br></pre></td></tr></table></figure>
+
+<p>This will produce IR like the following fragment:</p>
+<figure class="highlight llvm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">define</span> void <span class="title">@foo</span>() <span class="keyword">gc</span> <span class="string">"&lt;collector description name&gt;"</span> &#123; ... &#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>TRANSLATION:</strong> 生成与GC相关的函数对应的IR，我们需要做以下操作：</p>
+<ul>
+<li>使用<code>@llvm.gcread</code>与<code>@llvm.gcwrite</code>来替代标准的<code>load</code>和<code>store</code>指令。这些内嵌函数用于表示<code>load barriers</code>和<code>store  barriers</code>。如果我们的GC收集器并不需要这些<code>barriers</code>，我们也可以跳过这些操作。</li>
+<li>使用我们所需要对接的GC的内存分配器，替换LLVM提供的标准内存分配函数。</li>
+<li>如果我们的收集器收集器还要求生成类型映射表，那么我们还需要在运行时库中添加相应的基础功能与相应的接口。LLVM并不会参与到这一过程。LLVM的类型系统一般情况下也并不适合来做相应的信息收集和统计，尤其是在编译器中做这件事。</li>
+<li>插入任何收集器工作所需要的代码。不少收集器要求程序在运行时阶段性地检查一些标记位，并根据不同的条件调用runtime函数。这通常来源于一些安全点轮询点需求（safepoint poll）。</li>
+</ul>
+<p><strong>ORIGIN:</strong> When generating LLVM IR for your functions, you will need to:</p>
+<ul>
+<li>Use <code>@llvm.gcread</code> and/or <code>@llvm.gcwrite</code> in place of standard load and store instructions. These intrinsics are used to represent load and store barriers. If you collector does not require such barriers, you can skip this step.</li>
+<li>Use the memory allocation routines provided by your garbage collector’s runtime library.</li>
+<li>If your collector requires them, generate type maps according to your runtime’s binary interface. LLVM is not involved in the process. In particular, the LLVM type system is not suitable for conveying such information though the compiler.</li>
+<li>Insert any coordination code required for interacting with your collector. Many collectors require running application code to periodically check a flag and conditionally call a runtime function. This is often referred to as a safepoint poll.</li>
+</ul>
+<p><strong>TRANSLATION:</strong> 我们需要在生成的IR中识别出<code>roots</code>（收集器需要感知到堆对象的引用），这样LLVM可以将它们编码到代码的<code>stack map</code>中。根据不同的收集器策略，通过使用<code>@llvm.gcroot</code>或者一个<code>gc.statepoint</code>重分配语句。</p>
+<p><strong>ORIGIN:</strong> You will need to identify roots (i.e. references to heap objects your collector needs to know about) in your generated IR, so that LLVM can encode them into your final stack maps. Depending on the collector strategy chosen, this is accomplished by using either the <code>@llvm.gcroot</code> intrinsics or an <code>gc.statepoint</code> relocation sequence.</p>
+<p><strong>TRANSLATION:</strong> 在计算一个表达式时，对于计算中的每个中间值都需要为其创建一个<code>root</code>。在函数调用表达式<code>h(f(), g())</code>中，如果在计算<code>g()</code>的时候出发了GC，那么<code>f()</code>的计算结果就可以比较容易的被回收。</p>
+<p><strong>ORIGIN:</strong> Don’t forget to create a root for each intermediate value that is generated when evaluating an expression. In <code>h(f(), g())</code>, the result of <code>f()</code> could easily be collected if evaluating <code>g()</code> triggers a collection.</p>
+<p><strong>TRANSLATION:</strong> 最后，我们需要将<code>runtime</code>库与生成的可执行程序链接起来，或者其他可以保证程序运行时可以调用到<code>runtime</code>库函数的方式也行。</p>
+<p><strong>ORIGIN:</strong> Finally, you need to link your runtime library with the generated program executable (for a static compiler) or ensure the appropriate symbols are available for the runtime linker (for a JIT compiler).</p>
+<h2 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h2><h3 id="What-is-Garbage-Collection"><a href="#What-is-Garbage-Collection" class="headerlink" title="What is Garbage Collection?"></a>What is Garbage Collection?</h3><p><strong>TRANSLATION:</strong> 垃圾回收是一种被广泛使用的技术，可以将程序员从复杂的对象生命周期管理工作中解放出来。垃圾回收技术可以帮助程序更容易运行和维护。很多编程语言都依赖垃圾回收技术来进行内存管理。根据精确度，垃圾回收技术大致可以分为两种：保守式和精确式。</p>
+<p><strong>ORIGIN:</strong> Garbage collection is a widely used technique that frees the programmer from having to know the lifetimes of heap objects, making software easier to produce and maintain. Many programming languages rely on garbage collection for automatic memory management. There are two primary forms of garbage collection: conservative and accurate.</p>
+<p><strong>TRANSLATION:</strong> 保守式垃圾回收技术一般对于编程语言或编译器都没有特殊的要求。即使对于非类型安全的编程语言（例如C/C++），保守式垃圾回收技术也能良好地工作。著名的<strong>Boehm collector</strong>就是一种当前比较先进的保守式垃圾回收算法。</p>
+<p><strong>ORIGIN:</strong> Conservative garbage collection often does not require any special support from either the language or the compiler: it can handle non-type-safe programming languages (such as C/C++) and does not require any special information from the compiler. The <a href="http://www.hpl.hp.com/personal/Hans_Boehm/gc/" target="_blank" rel="noopener">Boehm collector</a> is an example of a state-of-the-art conservative collector.</p>
+<p><strong>TRANSLATION:</strong> 精确式垃圾回收技术要求能在程序运行时对所有的指针都能识别，这就要求源语言是类型安全的，才能保证在编译阶段和运行阶段都没有不可控的隐式类型转换。在程序运行时识别所有的指针意味着要求编译器需要支持对所有运行时可能存在的指针进行内存分配，这样我们可以在编译期识别所有的指针，包括程序栈和寄存器。</p>
+<p><strong>ORIGIN:</strong> Accurate garbage collection requires the ability to identify all pointers in the program at run-time (which requires that the source-language be type-safe in most cases). Identifying pointers at run-time requires compiler support to locate all places that hold live pointer variables at run-time, including the <a href="https://llvm.org/docs/GarbageCollection.html#gcroot" target="_blank" rel="noopener">processor stack and registers</a>.</p>
+<p><strong>TRANSLATION:</strong> 保守式垃圾回收是非常吸引人的，因为它不需要编译器的特殊支持，但也存在一定的问题。保守式垃圾回收技术中，收集器无法明确地识别一个目标是否是一个指针，那么它就无法转移这个目标（因此保守式回收技术中无法应用内存压缩和分代的GC算法），同时保守式GC中偶尔也会存在内存泄漏现象，尤其是当一个整数值正好指向了一个对象。此外，一些激进的编译器优化也会破坏保守式垃圾回收器（实践中很少发生）。</p>
+<p><strong>ORIGIN:</strong> Conservative garbage collection is attractive because it does not require any special compiler support, but it does have problems. In particular, because the conservative garbage collector cannot <em>know</em> that a particular word in the machine is a pointer, it cannot move live objects in the heap (preventing the use of compacting and generational GC algorithms) and it can occasionally suffer from memory leaks due to integer values that happen to point to objects in the program. In addition, some aggressive compiler transformations can break conservative garbage collectors (though these seem rare in practice).</p>
+<p><strong>TRANSLATION:</strong> 精确式垃圾回收器不会有任何上述的问题，但会遭遇程序的标量优化退化（scalar optimization）。特别是由于运行时必须能识别并更新所有的活动指针，一些优化效果会下降。所幸的是局部性和使用激进的垃圾回收技术所带来的性能提升能够弥补这些低阶的性能损失。</p>
+<p><strong>ORIGIN:</strong> Accurate garbage collectors do not suffer from any of these problems, but they can suffer from degraded scalar optimization of the program. In particular, because the runtime must be able to identify and update all pointers active in the program, some optimizations are less effective. In practice, however, the locality and performance benefits of using aggressive garbage collection techniques dominates any low-level losses.</p>
+<p><strong>TRANSLATION:</strong> 这份文档描述了LLVM为了支持精确式垃圾回收所提供的机制和接口。</p>
+<p><strong>ORIGIN:</strong> This document describes the mechanisms and interfaces provided by LLVM to support accurate garbage collection.</p>
+<h3 id="Goals-and-non-goals"><a href="#Goals-and-non-goals" class="headerlink" title="Goals and non-goals"></a>Goals and non-goals</h3><p><strong>TRANSLATION:</strong> LLVM的中间表达为很多垃圾回收模型提供了垃圾回收相关固有函数的支持。例如，这些固有函数支持：</p>
+<ul>
+<li>半空间收集器</li>
+<li>标记-清楚收集器</li>
+<li>分代收集器</li>
+<li>递增收集器</li>
+<li>并发收集器</li>
+<li>协作收集器</li>
+<li>引用计数</li>
+</ul>
+<p><strong>ORIGIN:</strong> LLVM’s intermediate representation provides <a href="https://llvm.org/docs/GarbageCollection.html#gc-intrinsics" target="_blank" rel="noopener">garbage collection intrinsics</a> that offer support for a broad class of collector models. For instance, the intrinsics permit:</p>
+<ul>
+<li>semi-space collectors</li>
+<li>mark-sweep collectors</li>
+<li>generational collectors</li>
+<li>incremental collectors</li>
+<li>concurrent collectors</li>
+<li>cooperative collectors</li>
+<li>reference counting</li>
+</ul>
+<p><strong>TRANSLATION:</strong> 我们希望这些LLVM IR中内建的支持能够支持大量的依赖于GC的编程语言，例如 Scheme，ML，Java，C#，Perl，Python，Lua，Ruby以及其他脚本语言。</p>
+<p><strong>ORIGIN:</strong> We hope that the support built into the LLVM IR is sufficient to support a broad class of garbage collected languages including Scheme, ML, Java, C#, Perl, Python, Lua, Ruby, other scripting languages, and more.</p>
+<p><strong>TRANSLATION:</strong> 请注意，LLVM自身并不提供垃圾收集器，垃圾收集器应该属于语言运行时库的一部分。LLVM提供了一个描述垃圾收集器对编译器需求的框架。特别的，LLVM支持在调用点生成stack map、轮询安全点以及生成load&amp;stroe栅。我们也可以通过代码生成插件来扩展LLVM，在二进制接口中生成runtime库所定义的代码和数据结构。这跟DWARF调试信息和LLVM的关系类似。唯一的区别在于，DWARF有相对标准的规范，而垃圾回收没有，这也要求LLVM提供一个相对灵活的扩展机制。</p>
+<p><strong>ORIGIN:</strong> Note that LLVM <strong>does not itself provide a garbage collector</strong> — this should be part of your language’s runtime library. LLVM provides a framework for describing the garbage collectors requirements to the compiler. In particular, LLVM provides support for generating stack maps at call sites, polling for a safepoint, and emitting load and store barriers. You can also extend LLVM - possibly through a loadable <a href="https://llvm.org/docs/GarbageCollection.html#plugin" target="_blank" rel="noopener">code generation plugins</a> - to generate code and data structures which conforms to the <em>binary interface</em> specified by the <em>runtime library</em>. This is similar to the relationship between LLVM and DWARF debugging info, for example. The difference primarily lies in the lack of an established standard in the domain of garbage collection — thus the need for a flexible extension mechanism.</p>
+<p><strong>TRANSLATION:</strong> LLVM对GC的支持所关注的二进制接口包括：</p>
+<ul>
+<li>在代码中创建GC安全点，帮助GC可以安全地执行；</li>
+<li>栈映射的计算。对于代码中的每个安全点，栈帧中的对象引用都必须被识别出来，这样收集器才能遍历它们，并适时地更新它们；</li>
+<li>在写入堆对象引用时的写栅栏。这些写栅栏普遍被用于分代收集器中进行递增式扫描；</li>
+<li>在读取对象应用时发布读栅栏。这对于与并发收集器的互操作是很有用的。</li>
+</ul>
+<p><strong>ORIGIN:</strong> The aspects of the binary interface with which LLVM’s GC support is concerned are:</p>
+<ul>
+<li>Creation of GC safepoints within code where collection is allowed to execute safely.</li>
+<li>Computation of the stack map. For each safe point in the code, object references within the stack frame must be identified so that the collector may traverse and perhaps update them.</li>
+<li>Write barriers when storing object references to the heap. These are commonly used to optimize incremental scans in generational collectors.</li>
+<li>Emission of read barriers when loading object references. These are useful for interoperating with concurrent collectors.</li>
+</ul>
+<p><strong>TRANSLATION:</strong> LLVM没有直接处理和解决的领域有：</p>
+<ul>
+<li>将全局根注册到运行时；</li>
+<li>将栈映射入口注册到运行时；</li>
+<li>程序运行过程中的内存分配函数、垃圾回收触发函数等；</li>
+<li>类型映射表的计算或编译，或者将它们注册到运行时也为涉及。这些一般用于在堆中获取对象的引用。</li>
+</ul>
+<p><strong>ORIGIN:</strong> There are additional areas that LLVM does not directly address:</p>
+<ul>
+<li>Registration of global roots with the runtime.</li>
+<li>Registration of stack map entries with the runtime.</li>
+<li>The functions used by the program to allocate memory, trigger a collection, etc.</li>
+<li>Computation or compilation of type maps, or registration of them with the runtime. These are used to crawl the heap for object references.</li>
+</ul>
+<p><strong>TRANSLATION:</strong> 总体来讲，LLVM对GC的支持不包括那些可以通过其他IR特性可以解决的方面，LLVM也不提供相应的二进制接口。这也意味着我们必须将一个已有的运行时库与LLVM集成到一起。此外，这也会给创造一门全新的语言带来非常多的工作量。通过提供内建的收集器策略描述，这样能够与大部分普通的收集器协同工作，以及一些容易扩展的点来缓和上述难点。如果你没有什么需要特殊支持的二进制接口，那么建议你可以选择一个内建收集器策略。</p>
+<p><strong>ORIGIN:</strong> In general, LLVM’s support for GC does not include features which can be adequately addressed with other features of the IR and does not specify a particular binary interface. On the plus side, this means that you should be able to integrate LLVM with an existing runtime. On the other hand, it can have the effect of leaving a lot of work for the developer of a novel language. We try to mitigate this by providing built in collector strategy descriptions that can work with many common collector designs and easy extension points. If you don’t already have a specific binary interface you need to support, we recommend trying to use one of these built in collector strategies.</p>
+<h2 id="LLVM-IR-Features"><a href="#LLVM-IR-Features" class="headerlink" title="LLVM IR Features"></a>LLVM IR Features</h2><p><strong>TRANSLATION:</strong> 本节描述LLVM IR提供的垃圾回收基础设施。这些IR特性具体的表现由用户所选择的不同GC策略描述定义与明确。</p>
+<p><strong>ORIGIN:</strong> This section describes the garbage collection facilities provided by the <a href="https://llvm.org/docs/LangRef.html" target="_blank" rel="noopener">LLVM intermediate representation</a>. The exact behavior of these IR features is specified by the selected <a href="https://llvm.org/docs/GarbageCollection.html#plugin" target="_blank" rel="noopener">GC strategy description</a>.</p>
+<h3 id="Specifying-GC-code-generation-gc-quot-quot"><a href="#Specifying-GC-code-generation-gc-quot-quot" class="headerlink" title="Specifying GC code generation: gc &quot;...&quot;"></a>Specifying GC code generation: <code>gc &quot;...&quot;</code></h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">define &lt;returntype&gt; @name(...) gc &quot;name&quot; &#123; ... &#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>TRANSLATION:</strong> GC函数属性用于指定编译器所对接的GC策略。在程序上等价于<code>Function</code>的<code>setGC</code>方法。</p>
+<p><strong>ORIGIN:</strong> The <code>gc</code> function attribute is used to specify the desired GC strategy to the compiler. Its programmatic equivalent is the <code>setGC</code> method of <code>Function</code>.</p>
+<p><strong>TRANSLATION:</strong> 对一个函数设置“name”会触发对GC策略的子集的搜索。某些收集器策略是内置的。我们也可以通过一个可扩展的插件机制来自定义添加新的GC策略，当然也可以通过给LLVM加Patch的方式来扩展。GC策略定义了所生成代码的具体的行为，来支持GC。如果搜索失败，编译器会报错。</p>
+<p><strong>ORIGIN:</strong> Setting <code>gc &quot;name&quot;</code> on a function triggers a search for a matching subclass of GCStrategy. Some collector strategies are built in. You can add others using either the loadable plugin mechanism, or by patching your copy of LLVM. It is the selected GC strategy which defines the exact nature of the code generated to support GC. If none is found, the compiler will raise an error.</p>
+<p><strong>TRANSLATION:</strong> </p>
+<p><strong>ORIGIN:</strong> Specifying the GC style on a per-function basis allows LLVM to link together programs that use different garbage collection algorithms (or none at all).</p>
+<h3 id="Identifying-GC-roots-on-the-stack"><a href="#Identifying-GC-roots-on-the-stack" class="headerlink" title="Identifying GC roots on the stack"></a>Identifying GC roots on the stack</h3><h4 id="Using-gc-safepoint"><a href="#Using-gc-safepoint" class="headerlink" title="Using gc.safepoint"></a>Using <code>gc.safepoint</code></h4><p><a href="https://llvm.org/docs/Statepoints.html" target="_blank" rel="noopener">This page</a> contains detailed documentation for <code>gc.statepoint</code>.</p>
+<h4 id="Using-llvm-gcwrite"><a href="#Using-llvm-gcwrite" class="headerlink" title="Using llvm.gcwrite"></a>Using <code>llvm.gcwrite</code></h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">void @llvm.gcroot(i8** %ptrloc, i8* %metadata)</span><br></pre></td></tr></table></figure>
+
+<p>The <code>llvm.gcroot</code> intrinsic is used to inform LLVM that a stack variable references an object on the heap and is to be tracked for garbage collection. The exact impact on generated code is specified by the Function’s selected <a href="https://llvm.org/docs/GarbageCollection.html#plugin" target="_blank" rel="noopener">GC strategy</a>. All calls to <code>llvm.gcroot</code> <strong>must</strong> reside inside the first basic block.</p>
+<p>The first argument <strong>must</strong> be a value referring to an alloca instruction or a bitcast of an alloca. The second contains a pointer to metadata that should be associated with the pointer, and <strong>must</strong> be a constant or global value address. If your target collector uses tags, use a null pointer for metadata.</p>
+<p>A compiler which performs manual SSA construction <strong>must</strong> ensure that SSA values representing GC references are stored in to the alloca passed to the respective <code>gcroot</code> before every call site and reloaded after every call. A compiler which uses mem2reg to raise imperative code using <code>alloca</code> into SSA form need only add a call to <code>@llvm.gcroot</code> for those variables which are pointers into the GC heap.</p>
+<p>It is also important to mark intermediate values with <code>llvm.gcroot</code>. For example, consider <code>h(f(), g())</code>. Beware leaking the result of <code>f()</code> in the case that <code>g()</code> triggers a collection. Note, that stack variables must be initialized and marked with <code>llvm.gcroot</code> in function’s prologue.</p>
+<p>The <code>%metadata</code> argument can be used to avoid requiring heap objects to have ‘isa’ pointers or tag bits. [<a href="https://llvm.org/docs/GarbageCollection.html#appel89" target="_blank" rel="noopener">Appel89</a>, <a href="https://llvm.org/docs/GarbageCollection.html#goldberg91" target="_blank" rel="noopener">Goldberg91</a>, <a href="https://llvm.org/docs/GarbageCollection.html#tolmach94" target="_blank" rel="noopener">Tolmach94</a>] If specified, its value will be tracked along with the location of the pointer in the stack frame.</p>
+<p>Consider the following fragment of Java code:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  Object X;   &#x2F;&#x2F; A null-initialized reference to an object</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>This block (which may be located in the middle of a function or in a loop nest), could be compiled to this LLVM code:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">Entry:</span><br><span class="line">   ;; In the entry block for the function, allocate the</span><br><span class="line">   ;; stack space for X, which is an LLVM pointer.</span><br><span class="line">   %X &#x3D; alloca %Object*</span><br><span class="line"></span><br><span class="line">   ;; Tell LLVM that the stack space is a stack root.</span><br><span class="line">   ;; Java has type-tags on objects, so we pass null as metadata.</span><br><span class="line">   %tmp &#x3D; bitcast %Object** %X to i8**</span><br><span class="line">   call void @llvm.gcroot(i8** %tmp, i8* null)</span><br><span class="line">   ...</span><br><span class="line"></span><br><span class="line">   ;; &quot;CodeBlock&quot; is the block corresponding to the start</span><br><span class="line">   ;;  of the scope above.</span><br><span class="line">CodeBlock:</span><br><span class="line">   ;; Java null-initializes pointers.</span><br><span class="line">   store %Object* null, %Object** %X</span><br><span class="line"></span><br><span class="line">   ...</span><br><span class="line"></span><br><span class="line">   ;; As the pointer goes out of scope, store a null value into</span><br><span class="line">   ;; it, to indicate that the value is no longer live.</span><br><span class="line">   store %Object* null, %Object** %X</span><br><span class="line">   ...</span><br></pre></td></tr></table></figure>
+
+<h3 id="Reading-and-writing-references-in-the-heap"><a href="#Reading-and-writing-references-in-the-heap" class="headerlink" title="Reading and writing references in the heap"></a>Reading and writing references in the heap</h3><p>Some collectors need to be informed when the mutator (the program that needs garbage collection) either reads a pointer from or writes a pointer to a field of a heap object. The code fragments inserted at these points are called <em>read barriers</em> and <em>write barriers</em>, respectively. The amount of code that needs to be executed is usually quite small and not on the critical path of any computation, so the overall performance impact of the barrier is tolerable.</p>
+<p>Barriers often require access to the <em>object pointer</em> rather than the <em>derived pointer</em> (which is a pointer to the field within the object). Accordingly, these intrinsics take both pointers as separate arguments for completeness. In this snippet, <code>%object</code> is the object pointer, and <code>%derived</code> is the derived pointer:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">;; An array type.</span><br><span class="line">%class.Array &#x3D; type &#123; %class.Object, i32, [0 x %class.Object*] &#125;</span><br><span class="line">...</span><br><span class="line"></span><br><span class="line">;; Load the object pointer from a gcroot.</span><br><span class="line">%object &#x3D; load %class.Array** %object_addr</span><br><span class="line"></span><br><span class="line">;; Compute the derived pointer.</span><br><span class="line">%derived &#x3D; getelementptr %object, i32 0, i32 2, i32 %n</span><br></pre></td></tr></table></figure>
+
+<p>LLVM does not enforce this relationship between the object and derived pointer (although a particular <a href="https://llvm.org/docs/GarbageCollection.html#plugin" target="_blank" rel="noopener">collector strategy</a> might). However, it would be an unusual collector that violated it.</p>
+<p>The use of these intrinsics is naturally optional if the target GC does not require the corresponding barrier. The GC strategy used with such a collector should replace the intrinsic calls with the corresponding <code>load</code> or <code>store</code> instruction if they are used.</p>
+<p>One known deficiency with the current design is that the barrier intrinsics do not include the size or alignment of the underlying operation performed. It is currently assumed that the operation is of pointer size and the alignment is assumed to be the target machine’s default alignment.</p>
+<h4 id="Write-barrier-llvm-gcwrite"><a href="#Write-barrier-llvm-gcwrite" class="headerlink" title="Write barrier: llvm.gcwrite"></a>Write barrier: <code>llvm.gcwrite</code></h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">void @llvm.gcwrite(i8* %value, i8* %object, i8** %derived)</span><br></pre></td></tr></table></figure>
+
+<p>For write barriers, LLVM provides the <code>llvm.gcwrite</code> intrinsic function. It has exactly the same semantics as a non-volatile <code>store</code> to the derived pointer (the third argument). The exact code generated is specified by the Function’s selected <a href="https://llvm.org/docs/GarbageCollection.html#plugin" target="_blank" rel="noopener">GC strategy</a>.</p>
+<p>Many important algorithms require write barriers, including generational and concurrent collectors. Additionally, write barriers could be used to implement reference counting.</p>
+<h4 id="Read-barrier-llvm-gcread"><a href="#Read-barrier-llvm-gcread" class="headerlink" title="Read barrier: llvm.gcread"></a>Read barrier: <code>llvm.gcread</code></h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">i8* @llvm.gcread(i8* %object, i8** %derived)</span><br></pre></td></tr></table></figure>
+
+<p>For read barriers, LLVM provides the <code>llvm.gcread</code> intrinsic function. It has exactly the same semantics as a non-volatile <code>load</code> from the derived pointer (the second argument). The exact code generated is specified by the Function’s selected <a href="https://llvm.org/docs/GarbageCollection.html#plugin" target="_blank" rel="noopener">GC strategy</a>.</p>
+<p>Read barriers are needed by fewer algorithms than write barriers, and may have a greater performance impact since pointer reads are more frequent than writes.</p>
+<h2 id="Built-In-GC-Strategies"><a href="#Built-In-GC-Strategies" class="headerlink" title="Built In GC Strategies"></a>Built In GC Strategies</h2><p>LLVM includes built in support for several varieties of garbage collectors.</p>
+<h3 id="The-Shadow-Stack-GC"><a href="#The-Shadow-Stack-GC" class="headerlink" title="The Shadow Stack GC"></a>The Shadow Stack GC</h3><p>To use this collector strategy, mark your functions with:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">F.setGC(&quot;shadow-stack&quot;);</span><br></pre></td></tr></table></figure>
+
+<p>Unlike many GC algorithms which rely on a cooperative code generator to compile stack maps, this algorithm carefully maintains a linked list of stack roots [<a href="https://llvm.org/docs/GarbageCollection.html#henderson02" target="_blank" rel="noopener">Henderson2002</a>]. This so-called “shadow stack” mirrors the machine stack. Maintaining this data structure is slower than using a stack map compiled into the executable as constant data, but has a significant portability advantage because it requires no special support from the target code generator, and does not require tricky platform-specific code to crawl the machine stack.</p>
+<p>The tradeoff for this simplicity and portability is:</p>
+<ul>
+<li>High overhead per function call.</li>
+<li>Not thread-safe.</li>
+</ul>
+<p>Still, it’s an easy way to get started. After your compiler and runtime are up and running, writing a <a href="https://llvm.org/docs/GarbageCollection.html#plugin" target="_blank" rel="noopener">plugin</a> will allow you to take advantage of <a href="https://llvm.org/docs/GarbageCollection.html#collector-algos" target="_blank" rel="noopener">more advanced GC features</a> of LLVM in order to improve performance.</p>
+<p>The shadow stack doesn’t imply a memory allocation algorithm. A semispace collector or building atop <code>malloc</code> are great places to start, and can be implemented with very little code.</p>
+<p>When it comes time to collect, however, your runtime needs to traverse the stack roots, and for this it needs to integrate with the shadow stack. Luckily, doing so is very simple. (This code is heavily commented to help you understand the data structure, but there are only 20 lines of meaningful code.)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;&#x2F; The map for a single function&#39;s stack frame.  One of these is</span><br><span class="line">&#x2F;&#x2F;&#x2F;        compiled as constant data into the executable for each function.</span><br><span class="line">&#x2F;&#x2F;&#x2F;</span><br><span class="line">&#x2F;&#x2F;&#x2F; Storage of metadata values is elided if the %metadata parameter to</span><br><span class="line">&#x2F;&#x2F;&#x2F; @llvm.gcroot is null.</span><br><span class="line">struct FrameMap &#123;</span><br><span class="line">  int32_t NumRoots;    &#x2F;&#x2F;&lt; Number of roots in stack frame.</span><br><span class="line">  int32_t NumMeta;     &#x2F;&#x2F;&lt; Number of metadata entries.  May be &lt; NumRoots.</span><br><span class="line">  const void *Meta[0]; &#x2F;&#x2F;&lt; Metadata for each root.</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F;&#x2F; A link in the dynamic shadow stack.  One of these is embedded in</span><br><span class="line">&#x2F;&#x2F;&#x2F;        the stack frame of each function on the call stack.</span><br><span class="line">struct StackEntry &#123;</span><br><span class="line">  StackEntry *Next;    &#x2F;&#x2F;&lt; Link to next stack entry (the caller&#39;s).</span><br><span class="line">  const FrameMap *Map; &#x2F;&#x2F;&lt; Pointer to constant FrameMap.</span><br><span class="line">  void *Roots[0];      &#x2F;&#x2F;&lt; Stack roots (in-place array).</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F;&#x2F; The head of the singly-linked list of StackEntries.  Functions push</span><br><span class="line">&#x2F;&#x2F;&#x2F;        and pop onto this in their prologue and epilogue.</span><br><span class="line">&#x2F;&#x2F;&#x2F;</span><br><span class="line">&#x2F;&#x2F;&#x2F; Since there is only a global list, this technique is not threadsafe.</span><br><span class="line">StackEntry *llvm_gc_root_chain;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F;&#x2F; Calls Visitor(root, meta) for each GC root on the stack.</span><br><span class="line">&#x2F;&#x2F;&#x2F;        root and meta are exactly the values passed to</span><br><span class="line">&#x2F;&#x2F;&#x2F;        @llvm.gcroot.</span><br><span class="line">&#x2F;&#x2F;&#x2F;</span><br><span class="line">&#x2F;&#x2F;&#x2F; Visitor could be a function to recursively mark live objects.  Or it</span><br><span class="line">&#x2F;&#x2F;&#x2F; might copy them to another heap or generation.</span><br><span class="line">&#x2F;&#x2F;&#x2F;</span><br><span class="line">&#x2F;&#x2F;&#x2F; @param Visitor A function to invoke for every GC root on the stack.</span><br><span class="line">void visitGCRoots(void (*Visitor)(void **Root, const void *Meta)) &#123;</span><br><span class="line">  for (StackEntry *R &#x3D; llvm_gc_root_chain; R; R &#x3D; R-&gt;Next) &#123;</span><br><span class="line">    unsigned i &#x3D; 0;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; For roots [0, NumMeta), the metadata pointer is in the FrameMap.</span><br><span class="line">    for (unsigned e &#x3D; R-&gt;Map-&gt;NumMeta; i !&#x3D; e; ++i)</span><br><span class="line">      Visitor(&amp;R-&gt;Roots[i], R-&gt;Map-&gt;Meta[i]);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; For roots [NumMeta, NumRoots), the metadata pointer is null.</span><br><span class="line">    for (unsigned e &#x3D; R-&gt;Map-&gt;NumRoots; i !&#x3D; e; ++i)</span><br><span class="line">      Visitor(&amp;R-&gt;Roots[i], NULL);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="The-‘Erlang’-and-‘Ocaml’-GCs"><a href="#The-‘Erlang’-and-‘Ocaml’-GCs" class="headerlink" title="The ‘Erlang’ and ‘Ocaml’ GCs"></a>The ‘Erlang’ and ‘Ocaml’ GCs</h3><p>LLVM ships with two example collectors which leverage the <code>gcroot</code> mechanisms. To our knowledge, these are not actually used by any language runtime, but they do provide a reasonable starting point for someone interested in writing an <code>gcroot</code> compatible GC plugin. In particular, these are the only in tree examples of how to produce a custom binary stack map format using a <code>gcroot</code> strategy.</p>
+<p>As there names imply, the binary format produced is intended to model that used by the Erlang and OCaml compilers respectively.</p>
+<h3 id="The-Statepoint-Example-GC"><a href="#The-Statepoint-Example-GC" class="headerlink" title="The Statepoint Example GC"></a>The Statepoint Example GC</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">F.setGC(&quot;statepoint-example&quot;);</span><br></pre></td></tr></table></figure>
+
+<p>This GC provides an example of how one might use the infrastructure provided by <code>gc.statepoint</code>. This example GC is compatible with the <a href="https://llvm.org/docs/Statepoints.html#placesafepoints" target="_blank" rel="noopener">PlaceSafepoints</a> and <a href="https://llvm.org/docs/Statepoints.html#rewritestatepointsforgc" target="_blank" rel="noopener">RewriteStatepointsForGC</a> utility passes which simplify <code>gc.statepoint</code> sequence insertion. If you need to build a custom GC strategy around the <code>gc.statepoints</code> mechanisms, it is recommended that you use this one as a starting point.</p>
+<p>This GC strategy does not support read or write barriers. As a result, these intrinsics are lowered to normal loads and stores.</p>
+<p>The stack map format generated by this GC strategy can be found in the <a href="https://llvm.org/docs/StackMaps.html#stackmap-section" target="_blank" rel="noopener">Stack Map Section</a> using a format documented <a href="https://llvm.org/docs/Statepoints.html#statepoint-stackmap-format" target="_blank" rel="noopener">here</a>. This format is intended to be the standard format supported by LLVM going forward.</p>
+<h3 id="The-CoreCLR-GC"><a href="#The-CoreCLR-GC" class="headerlink" title="The CoreCLR GC"></a>The CoreCLR GC</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">F.setGC(&quot;coreclr&quot;);</span><br></pre></td></tr></table></figure>
+
+<p>This GC leverages the <code>gc.statepoint</code> mechanism to support the <a href="https://github.com/dotnet/coreclr" target="_blank" rel="noopener">CoreCLR</a> runtime.</p>
+<p>Support for this GC strategy is a work in progress. This strategy will differ from <a href="https://llvm.org/docs/GarbageCollection.html#statepoint-example-gc" target="_blank" rel="noopener">statepoint-example GC</a> strategy in certain aspects like:</p>
+<ul>
+<li>Base-pointers of interior pointers are not explicitly tracked and reported.</li>
+<li>A different format is used for encoding stack maps.</li>
+<li>Safe-point polls are only needed before loop-back edges and before tail-calls (not needed at function-entry).</li>
+</ul>
+<h2 id="Custom-GC-Strategies"><a href="#Custom-GC-Strategies" class="headerlink" title="Custom GC Strategies"></a>Custom GC Strategies</h2><p>If none of the built in GC strategy descriptions met your needs above, you will need to define a custom GCStrategy and possibly, a custom LLVM pass to perform lowering. Your best example of where to start defining a custom GCStrategy would be to look at one of the built in strategies.</p>
+<p>You may be able to structure this additional code as a loadable plugin library. Loadable plugins are sufficient if all you need is to enable a different combination of built in functionality, but if you need to provide a custom lowering pass, you will need to build a patched version of LLVM. If you think you need a patched build, please ask for advice on llvm-dev. There may be an easy way we can extend the support to make it work for your use case without requiring a custom build.</p>
+<h3 id="Collector-Requirements"><a href="#Collector-Requirements" class="headerlink" title="Collector Requirements"></a>Collector Requirements</h3><p>You should be able to leverage any existing collector library that includes the following elements:</p>
+<ol>
+<li>A memory allocator which exposes an allocation function your compiled code can call.</li>
+<li>A binary format for the stack map. A stack map describes the location of references at a safepoint and is used by precise collectors to identify references within a stack frame on the machine stack. Note that collectors which conservatively scan the stack don’t require such a structure.</li>
+<li>A stack crawler to discover functions on the call stack, and enumerate the references listed in the stack map for each call site.</li>
+<li>A mechanism for identifying references in global locations (e.g. global variables).</li>
+<li>If you collector requires them, an LLVM IR implementation of your collectors load and store barriers. Note that since many collectors don’t require barriers at all, LLVM defaults to lowering such barriers to normal loads and stores unless you arrange otherwise.</li>
+</ol>
+<h3 id="Implementing-a-collector-plugin"><a href="#Implementing-a-collector-plugin" class="headerlink" title="Implementing a collector plugin"></a>Implementing a collector plugin</h3><p>User code specifies which GC code generation to use with the <code>gc</code> function attribute or, equivalently, with the <code>setGC</code> method of <code>Function</code>.</p>
+<p>To implement a GC plugin, it is necessary to subclass <code>llvm::GCStrategy</code>, which can be accomplished in a few lines of boilerplate code. LLVM’s infrastructure provides access to several important algorithms. For an uncontroversial collector, all that remains may be to compile LLVM’s computed stack map to assembly code (using the binary representation expected by the runtime library). This can be accomplished in about 100 lines of code.</p>
+<p>This is not the appropriate place to implement a garbage collected heap or a garbage collector itself. That code should exist in the language’s runtime library. The compiler plugin is responsible for generating code which conforms to the binary interface defined by library, most essentially the <a href="https://llvm.org/docs/GarbageCollection.html#stack-map" target="_blank" rel="noopener">stack map</a>.</p>
+<p>To subclass <code>llvm::GCStrategy</code> and register it with the compiler:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; lib&#x2F;MyGC&#x2F;MyGC.cpp - Example LLVM GC plugin</span><br><span class="line"></span><br><span class="line">#include &quot;llvm&#x2F;CodeGen&#x2F;GCStrategy.h&quot;</span><br><span class="line">#include &quot;llvm&#x2F;CodeGen&#x2F;GCMetadata.h&quot;</span><br><span class="line">#include &quot;llvm&#x2F;Support&#x2F;Compiler.h&quot;</span><br><span class="line"></span><br><span class="line">using namespace llvm;</span><br><span class="line"></span><br><span class="line">namespace &#123;</span><br><span class="line">  class LLVM_LIBRARY_VISIBILITY MyGC : public GCStrategy &#123;</span><br><span class="line">  public:</span><br><span class="line">    MyGC() &#123;&#125;</span><br><span class="line">  &#125;;</span><br><span class="line"></span><br><span class="line">  GCRegistry::Add&lt;MyGC&gt;</span><br><span class="line">  X(&quot;mygc&quot;, &quot;My bespoke garbage collector.&quot;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>This boilerplate collector does nothing. More specifically:</p>
+<ul>
+<li><code>llvm.gcread</code> calls are replaced with the corresponding <code>load</code> instruction.</li>
+<li><code>llvm.gcwrite</code> calls are replaced with the corresponding <code>store</code> instruction.</li>
+<li>No safe points are added to the code.</li>
+<li>The stack map is not compiled into the executable.</li>
+</ul>
+<p>Using the LLVM makefiles, this code can be compiled as a plugin using a simple makefile:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"># lib&#x2F;MyGC&#x2F;Makefile</span><br><span class="line"></span><br><span class="line">LEVEL :&#x3D; ..&#x2F;..</span><br><span class="line">LIBRARYNAME &#x3D; MyGC</span><br><span class="line">LOADABLE_MODULE &#x3D; 1</span><br><span class="line"></span><br><span class="line">include $(LEVEL)&#x2F;Makefile.common</span><br></pre></td></tr></table></figure>
+
+<p>Once the plugin is compiled, code using it may be compiled using <code>llc -load=MyGC.so</code> (though MyGC.so may have some other platform-specific extension):</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ cat sample.ll</span><br><span class="line">define void @f() gc &quot;mygc&quot; &#123;</span><br><span class="line">entry:</span><br><span class="line">  ret void</span><br><span class="line">&#125;</span><br><span class="line">$ llvm-as &lt; sample.ll | llc -load&#x3D;MyGC.so</span><br></pre></td></tr></table></figure>
+
+<p>It is also possible to statically link the collector plugin into tools, such as a language-specific compiler front-end.</p>
+<h3 id="Overview-of-available-features"><a href="#Overview-of-available-features" class="headerlink" title="Overview of available features"></a>Overview of available features</h3><p><code>GCStrategy</code> provides a range of features through which a plugin may do useful work. Some of these are callbacks, some are algorithms that can be enabled, disabled, or customized. This matrix summarizes the supported (and planned) features and correlates them with the collection techniques which typically require them.</p>
+<p>To be clear, the collection techniques above are defined as:</p>
+<ul>
+<li><p>Shadow Stack</p>
+<p>The mutator carefully maintains a linked list of stack roots.</p>
+</li>
+<li><p>Reference Counting</p>
+<p>The mutator maintains a reference count for each object and frees an object when its count falls to zero.</p>
+</li>
+<li><p>Mark-Sweep</p>
+<p>When the heap is exhausted, the collector marks reachable objects starting from the roots, then deallocates unreachable objects in a sweep phase.</p>
+</li>
+<li><p>Copying</p>
+<p>As reachability analysis proceeds, the collector copies objects from one heap area to another, compacting them in the process. Copying collectors enable highly efficient “bump pointer” allocation and can improve locality of reference.</p>
+</li>
+<li><p>Incremental</p>
+<p>(Including generational collectors.) Incremental collectors generally have all the properties of a copying collector (regardless of whether the mature heap is compacting), but bring the added complexity of requiring write barriers.</p>
+</li>
+<li><p>Threaded</p>
+<p>Denotes a multithreaded mutator; the collector must still stop the mutator (“stop the world”) before beginning reachability analysis. Stopping a multithreaded mutator is a complicated problem. It generally requires highly platform-specific code in the runtime, and the production of carefully designed machine code at safe points.</p>
+</li>
+<li><p>Concurrent</p>
+<p>In this technique, the mutator and the collector run concurrently, with the goal of eliminating pause times. In a <em>cooperative</em> collector, the mutator further aids with collection should a pause occur, allowing collection to take advantage of multiprocessor hosts. The “stop the world” problem of threaded collectors is generally still present to a limited extent. Sophisticated marking algorithms are necessary. Read barriers may be necessary.</p>
+</li>
+</ul>
+<p>As the matrix indicates, LLVM’s garbage collection infrastructure is already suitable for a wide variety of collectors, but does not currently extend to multithreaded programs. This will be added in the future as there is interest.</p>
+<table>
+<thead>
+<tr>
+<th align="left">Algorithm</th>
+<th align="left">Done</th>
+<th align="left">Shadow stack</th>
+<th align="left">refcount</th>
+<th align="left">mark- sweep</th>
+<th align="left">copying</th>
+<th align="left">incremental</th>
+<th align="left">threaded</th>
+<th align="left">concurrent</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">stack map</td>
+<td align="left">✔</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left">✘</td>
+<td align="left">✘</td>
+<td align="left">✘</td>
+<td align="left">✘</td>
+<td align="left">✘</td>
+</tr>
+<tr>
+<td align="left">initialize roots</td>
+<td align="left">✔</td>
+<td align="left">✘</td>
+<td align="left">✘</td>
+<td align="left">✘</td>
+<td align="left">✘</td>
+<td align="left">✘</td>
+<td align="left">✘</td>
+<td align="left">✘</td>
+</tr>
+<tr>
+<td align="left">derived pointers</td>
+<td align="left">NO</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"><strong>N*</strong></td>
+<td align="left"><strong>N*</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>custom lowering</strong></td>
+<td align="left">✔</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><em>gcroot</em></td>
+<td align="left">✔</td>
+<td align="left">✘</td>
+<td align="left">✘</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><em>gcwrite</em></td>
+<td align="left">✔</td>
+<td align="left"></td>
+<td align="left">✘</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left">✘</td>
+<td align="left"></td>
+<td align="left">✘</td>
+</tr>
+<tr>
+<td align="left"><em>gcread</em></td>
+<td align="left">✔</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left">✘</td>
+</tr>
+<tr>
+<td align="left"><strong>safe points</strong></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><em>in calls</em></td>
+<td align="left">✔</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left">✘</td>
+<td align="left">✘</td>
+<td align="left">✘</td>
+<td align="left">✘</td>
+<td align="left">✘</td>
+</tr>
+<tr>
+<td align="left"><em>before calls</em></td>
+<td align="left">✔</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left">✘</td>
+<td align="left">✘</td>
+</tr>
+<tr>
+<td align="left"><em>for loops</em></td>
+<td align="left">NO</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"><strong>N</strong></td>
+<td align="left"><strong>N</strong></td>
+</tr>
+<tr>
+<td align="left"><em>before escape</em></td>
+<td align="left">✔</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left">✘</td>
+<td align="left">✘</td>
+</tr>
+<tr>
+<td align="left">emit code at safe points</td>
+<td align="left">NO</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"><strong>N</strong></td>
+<td align="left"><strong>N</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>output</strong></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><em>assembly</em></td>
+<td align="left">✔</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left">✘</td>
+<td align="left">✘</td>
+<td align="left">✘</td>
+<td align="left">✘</td>
+<td align="left">✘</td>
+</tr>
+<tr>
+<td align="left"><em>JIT</em></td>
+<td align="left">NO</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"><strong>?</strong></td>
+<td align="left"><strong>?</strong></td>
+<td align="left"><strong>?</strong></td>
+<td align="left"><strong>?</strong></td>
+<td align="left"><strong>?</strong></td>
+</tr>
+<tr>
+<td align="left"><em>obj</em></td>
+<td align="left">NO</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"><strong>?</strong></td>
+<td align="left"><strong>?</strong></td>
+<td align="left"><strong>?</strong></td>
+<td align="left"><strong>?</strong></td>
+<td align="left"><strong>?</strong></td>
+</tr>
+<tr>
+<td align="left">live analysis</td>
+<td align="left">NO</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"><strong>?</strong></td>
+<td align="left"><strong>?</strong></td>
+<td align="left"><strong>?</strong></td>
+<td align="left"><strong>?</strong></td>
+<td align="left"><strong>?</strong></td>
+</tr>
+<tr>
+<td align="left">register map</td>
+<td align="left">NO</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"><strong>?</strong></td>
+<td align="left"><strong>?</strong></td>
+<td align="left"><strong>?</strong></td>
+<td align="left"><strong>?</strong></td>
+<td align="left"><strong>?</strong></td>
+</tr>
+<tr>
+<td align="left">* Derived pointers only pose a hasard to copying collections.</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left"><strong>?</strong> denotes a feature which could be utilized if available.</td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+</tbody></table>
+<h3 id="Computing-stack-maps"><a href="#Computing-stack-maps" class="headerlink" title="Computing stack maps"></a>Computing stack maps</h3><p>LLVM automatically computes a stack map. One of the most important features of a <code>GCStrategy</code> is to compile this information into the executable in the binary representation expected by the runtime library.</p>
+<p>The stack map consists of the location and identity of each GC root in the each function in the module. For each root:</p>
+<ul>
+<li><code>RootNum</code>: The index of the root.</li>
+<li><code>StackOffset</code>: The offset of the object relative to the frame pointer.</li>
+<li><code>RootMetadata</code>: The value passed as the <code>%metadata</code> parameter to the <code>@llvm.gcroot</code> intrinsic.</li>
+</ul>
+<p>Also, for the function as a whole:</p>
+<ul>
+<li><ul>
+<li><p><code>getFrameSize()</code>: The overall size of the function’s initial stack frame,</p>
+<p>not accounting for any dynamic allocation.</p>
+</li>
+</ul>
+</li>
+<li><p><code>roots_size()</code>: The count of roots in the function.</p>
+</li>
+</ul>
+<p>To access the stack map, use <code>GCFunctionMetadata::roots_begin()</code> and -<code>end()</code> from the <a href="https://llvm.org/docs/GarbageCollection.html#assembly" target="_blank" rel="noopener">GCMetadataPrinter</a>:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">for (iterator I &#x3D; begin(), E &#x3D; end(); I !&#x3D; E; ++I) &#123;</span><br><span class="line">  GCFunctionInfo *FI &#x3D; *I;</span><br><span class="line">  unsigned FrameSize &#x3D; FI-&gt;getFrameSize();</span><br><span class="line">  size_t RootCount &#x3D; FI-&gt;roots_size();</span><br><span class="line"></span><br><span class="line">  for (GCFunctionInfo::roots_iterator RI &#x3D; FI-&gt;roots_begin(),</span><br><span class="line">                                      RE &#x3D; FI-&gt;roots_end();</span><br><span class="line">                                      RI !&#x3D; RE; ++RI) &#123;</span><br><span class="line">    int RootNum &#x3D; RI-&gt;Num;</span><br><span class="line">    int RootStackOffset &#x3D; RI-&gt;StackOffset;</span><br><span class="line">    Constant *RootMetadata &#x3D; RI-&gt;Metadata;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>If the <code>llvm.gcroot</code> intrinsic is eliminated before code generation by a custom lowering pass, LLVM will compute an empty stack map. This may be useful for collector plugins which implement reference counting or a shadow stack.</p>
+<h3 id="Initializing-roots-to-null"><a href="#Initializing-roots-to-null" class="headerlink" title="Initializing roots to null"></a>Initializing roots to null</h3><p>It is recommended that frontends initialize roots explicitly to avoid potentially confusing the optimizer. This prevents the GC from visiting uninitialized pointers, which will almost certainly cause it to crash.</p>
+<p>As a fallback, LLVM will automatically initialize each root to <code>null</code> upon entry to the function. Support for this mode in code generation is largely a legacy detail to keep old collector implementations working.</p>
+<h3 id="Custom-lowering-of-intrinsics"><a href="#Custom-lowering-of-intrinsics" class="headerlink" title="Custom lowering of intrinsics"></a><a href="https://llvm.org/docs/GarbageCollection.html#id25" target="_blank" rel="noopener">Custom lowering of intrinsics</a></h3><p>For GCs which use barriers or unusual treatment of stack roots, the implementor is responsibly for providing a custom pass to lower the intrinsics with the desired semantics. If you have opted in to custom lowering of a particular intrinsic your pass <strong>must</strong> eliminate all instances of the corresponding intrinsic in functions which opt in to your GC. The best example of such a pass is the ShadowStackGC and it’s ShadowStackGCLowering pass.</p>
+<p>There is currently no way to register such a custom lowering pass without building a custom copy of LLVM.</p>
+<h3 id="Generating-safe-points"><a href="#Generating-safe-points" class="headerlink" title="Generating safe points"></a>Generating safe points</h3><p>LLVM provides support for associating stackmaps with the return address of a call. Any loop or return safepoints required by a given collector design can be modeled via calls to runtime routines, or potentially patchable call sequences. Using gcroot, all call instructions are inferred to be possible safepoints and will thus have an associated stackmap.</p>
+<h3 id="Emitting-assembly-code-GCMetadataPrinter"><a href="#Emitting-assembly-code-GCMetadataPrinter" class="headerlink" title="Emitting assembly code: GCMetadataPrinter"></a>Emitting assembly code: <code>GCMetadataPrinter</code></h3><p>LLVM allows a plugin to print arbitrary assembly code before and after the rest of a module’s assembly code. At the end of the module, the GC can compile the LLVM stack map into assembly code. (At the beginning, this information is not yet computed.)</p>
+<p>Since AsmWriter and CodeGen are separate components of LLVM, a separate abstract base class and registry is provided for printing assembly code, the <code>GCMetadaPrinter</code> and <code>GCMetadataPrinterRegistry</code>. The AsmWriter will look for such a subclass if the <code>GCStrategy</code> sets <code>UsesMetadata</code>:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">MyGC::MyGC() &#123;</span><br><span class="line">  UsesMetadata &#x3D; true;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>This separation allows JIT-only clients to be smaller.</p>
+<p>Note that LLVM does not currently have analogous APIs to support code generation in the JIT, nor using the object writers.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; lib&#x2F;MyGC&#x2F;MyGCPrinter.cpp - Example LLVM GC printer</span><br><span class="line"></span><br><span class="line">#include &quot;llvm&#x2F;CodeGen&#x2F;GCMetadataPrinter.h&quot;</span><br><span class="line">#include &quot;llvm&#x2F;Support&#x2F;Compiler.h&quot;</span><br><span class="line"></span><br><span class="line">using namespace llvm;</span><br><span class="line"></span><br><span class="line">namespace &#123;</span><br><span class="line">  class LLVM_LIBRARY_VISIBILITY MyGCPrinter : public GCMetadataPrinter &#123;</span><br><span class="line">  public:</span><br><span class="line">    virtual void beginAssembly(AsmPrinter &amp;AP);</span><br><span class="line"></span><br><span class="line">    virtual void finishAssembly(AsmPrinter &amp;AP);</span><br><span class="line">  &#125;;</span><br><span class="line"></span><br><span class="line">  GCMetadataPrinterRegistry::Add&lt;MyGCPrinter&gt;</span><br><span class="line">  X(&quot;mygc&quot;, &quot;My bespoke garbage collector.&quot;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>The collector should use <code>AsmPrinter</code> to print portable assembly code. The collector itself contains the stack map for the entire module, and may access the <code>GCFunctionInfo</code> using its own <code>begin()</code> and <code>end()</code> methods. Here’s a realistic example:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><span class="line">#include &quot;llvm&#x2F;CodeGen&#x2F;AsmPrinter.h&quot;</span><br><span class="line">#include &quot;llvm&#x2F;IR&#x2F;Function.h&quot;</span><br><span class="line">#include &quot;llvm&#x2F;IR&#x2F;DataLayout.h&quot;</span><br><span class="line">#include &quot;llvm&#x2F;Target&#x2F;TargetAsmInfo.h&quot;</span><br><span class="line">#include &quot;llvm&#x2F;Target&#x2F;TargetMachine.h&quot;</span><br><span class="line"></span><br><span class="line">void MyGCPrinter::beginAssembly(AsmPrinter &amp;AP) &#123;</span><br><span class="line">  &#x2F;&#x2F; Nothing to do.</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void MyGCPrinter::finishAssembly(AsmPrinter &amp;AP) &#123;</span><br><span class="line">  MCStreamer &amp;OS &#x3D; AP.OutStreamer;</span><br><span class="line">  unsigned IntPtrSize &#x3D; AP.getPointerSize();</span><br><span class="line"></span><br><span class="line">  &#x2F;&#x2F; Put this in the data section.</span><br><span class="line">  OS.SwitchSection(AP.getObjFileLowering().getDataSection());</span><br><span class="line"></span><br><span class="line">  &#x2F;&#x2F; For each function...</span><br><span class="line">  for (iterator FI &#x3D; begin(), FE &#x3D; end(); FI !&#x3D; FE; ++FI) &#123;</span><br><span class="line">    GCFunctionInfo &amp;MD &#x3D; **FI;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; A compact GC layout. Emit this data structure:</span><br><span class="line">    &#x2F;&#x2F;</span><br><span class="line">    &#x2F;&#x2F; struct &#123;</span><br><span class="line">    &#x2F;&#x2F;   int32_t PointCount;</span><br><span class="line">    &#x2F;&#x2F;   void *SafePointAddress[PointCount];</span><br><span class="line">    &#x2F;&#x2F;   int32_t StackFrameSize; &#x2F;&#x2F; in words</span><br><span class="line">    &#x2F;&#x2F;   int32_t StackArity;</span><br><span class="line">    &#x2F;&#x2F;   int32_t LiveCount;</span><br><span class="line">    &#x2F;&#x2F;   int32_t LiveOffsets[LiveCount];</span><br><span class="line">    &#x2F;&#x2F; &#125; __gcmap_&lt;FUNCTIONNAME&gt;;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; Align to address width.</span><br><span class="line">    AP.emitAlignment(IntPtrSize &#x3D;&#x3D; 4 ? 2 : 3);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; Emit PointCount.</span><br><span class="line">    OS.AddComment(&quot;safe point count&quot;);</span><br><span class="line">    AP.emitInt32(MD.size());</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; And each safe point...</span><br><span class="line">    for (GCFunctionInfo::iterator PI &#x3D; MD.begin(),</span><br><span class="line">                                  PE &#x3D; MD.end(); PI !&#x3D; PE; ++PI) &#123;</span><br><span class="line">      &#x2F;&#x2F; Emit the address of the safe point.</span><br><span class="line">      OS.AddComment(&quot;safe point address&quot;);</span><br><span class="line">      MCSymbol *Label &#x3D; PI-&gt;Label;</span><br><span class="line">      AP.emitLabelPlusOffset(Label&#x2F;*Hi*&#x2F;, 0&#x2F;*Offset*&#x2F;, 4&#x2F;*Size*&#x2F;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; Stack information never change in safe points! Only print info from the</span><br><span class="line">    &#x2F;&#x2F; first call-site.</span><br><span class="line">    GCFunctionInfo::iterator PI &#x3D; MD.begin();</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; Emit the stack frame size.</span><br><span class="line">    OS.AddComment(&quot;stack frame size (in words)&quot;);</span><br><span class="line">    AP.emitInt32(MD.getFrameSize() &#x2F; IntPtrSize);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; Emit stack arity, i.e. the number of stacked arguments.</span><br><span class="line">    unsigned RegisteredArgs &#x3D; IntPtrSize &#x3D;&#x3D; 4 ? 5 : 6;</span><br><span class="line">    unsigned StackArity &#x3D; MD.getFunction().arg_size() &gt; RegisteredArgs ?</span><br><span class="line">                          MD.getFunction().arg_size() - RegisteredArgs : 0;</span><br><span class="line">    OS.AddComment(&quot;stack arity&quot;);</span><br><span class="line">    AP.emitInt32(StackArity);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; Emit the number of live roots in the function.</span><br><span class="line">    OS.AddComment(&quot;live root count&quot;);</span><br><span class="line">    AP.emitInt32(MD.live_size(PI));</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; And for each live root...</span><br><span class="line">    for (GCFunctionInfo::live_iterator LI &#x3D; MD.live_begin(PI),</span><br><span class="line">                                       LE &#x3D; MD.live_end(PI);</span><br><span class="line">                                       LI !&#x3D; LE; ++LI) &#123;</span><br><span class="line">      &#x2F;&#x2F; Emit live root&#39;s offset within the stack frame.</span><br><span class="line">      OS.AddComment(&quot;stack index (offset &#x2F; wordsize)&quot;);</span><br><span class="line">      AP.emitInt32(LI-&gt;StackOffset);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="References"><a href="#References" class="headerlink" title="References"></a>References</h2><p>[LLVM Doc] <a href="https://llvm.org/docs/GarbageCollection.htmls" target="_blank" rel="noopener">Garbage Collection based on LLVM</a></p>
+<p>[Henderson2002] <a href="http://citeseer.ist.psu.edu/henderson02accurate.html" target="_blank" rel="noopener">Accurate Garbage Collection in an Uncooperative Environment</a></p>
+
+    </article>
+    <!-- license  -->
+    
+        <div class="license-wrapper">
+            <p>Author：<a href="https://chinomars.com">Chino Mars</a>
+            <p>原文链接：<a href="https://chinomars.com/2020/10/28/Garbage-Collection-based-on-LLVM/">https://chinomars.com/2020/10/28/Garbage-Collection-based-on-LLVM/</a>
+            <p>发表日期：<a href="https://chinomars.com/2020/10/28/Garbage-Collection-based-on-LLVM/">October 28th 2020, 12:56:36 am</a>
+            <p>更新日期：<a href="https://chinomars.com/2020/10/28/Garbage-Collection-based-on-LLVM/">November 13th 2020, 9:26:42 pm</a>
+            <p>版权声明：本文采用<a rel="license noopener" href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可</p>
+        </div>
+    
+    <!-- paginator  -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+                <div class="nextSlogan">Next Post</div>
+                <a href= "/2020/12/02/30-Years-Later-QBasic-Is-Still-The-Best-%E8%AF%91%E6%96%87/" title= "30-Years-Later-QBasic-Is-Still-The-Best-译文">
+                    <div class="nextTitle">30-Years-Later-QBasic-Is-Still-The-Best-译文</div>
+                </a>
+            
+        </li>
+        <li class="previous">
+            
+                <div class="prevSlogan">Previous Post</div>
+                <a href= "/2020/02/12/Python%E7%9A%84%E4%BA%A4%E4%BA%92%E5%BC%8F/" title= "Python的交互式介绍">
+                    <div class="prevTitle">Python的交互式介绍</div>
+                </a>
+            
+        </li>
+    </ul>
+    <!-- 评论插件 -->
+    <!-- 来必力City版安装代码 -->
+
+    <div id="lv-container" data-id="city" data-uid= MTAyMC80ODQzMi8yNDkyNg==>
+        <script type="text/javascript">
+            (function (d, s) {
+                var j, e = d.getElementsByTagName(s)[0];
+                if (typeof LivereTower === 'function') { return; }
+                j = d.createElement(s);
+                j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+                j.async = true;
+
+                e.parentNode.insertBefore(j, e);
+            })(document, 'script');
+        </script>
+        <noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+    </div>
+
+<!-- City版安装代码已完成 -->
+    
+    
+    <!-- partial('_partial/comment/changyan') -->
+    <!--PC版-->
+
+
+    
+    
+
+    <!-- 评论 -->
+</main>
+            <!-- profile -->
+            
+        </div>
+        <footer class="footer footer-unloaded">
+    <!-- social  -->
+    
+    <div class="social">
+        
+    
+        
+            
+                <a href="mailto:chinomars@163.com" class="iconfont-archer email" title=email ></a>
+            
+        
+    
+        
+            
+                <a href="//github.com/ChinoMars" class="iconfont-archer github" target="_blank" title=github></a>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+                <a href="/atom.xml" class="iconfont-archer rss" target="_blank" title=rss></a>
+            
+        
+    
+
+    </div>
+    
+    <!-- powered by Hexo  -->
+    <div class="copyright">
+        <span id="hexo-power">Powered by <a href="https://hexo.io/" target="_blank">Hexo</a></span><span class="iconfont-archer power">&#xe635;</span><span id="theme-info">theme <a href="https://github.com/fi3ework/hexo-theme-archer" target="_blank">Archer</a></span>
+    </div>
+    <!-- 不蒜子  -->
+    
+    <div class="busuanzi-container">
+    
+     
+    <span id="busuanzi_container_site_pv">PV: <span id="busuanzi_value_site_pv"></span> :)</span>
+    
+    </div>
+    
+</footer>
+    </div>
+    <!-- toc -->
+    
+    <div class="toc-wrapper" style=
+    
+
+
+
+
+
+
+
+top:50vh;
+
+    >
+        <div class="toc-catalog">
+            <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
+        </div>
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Abstract"><span class="toc-number">1.</span> <span class="toc-text">Abstract</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Quick-Start"><span class="toc-number">2.</span> <span class="toc-text">Quick Start</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Introduction"><span class="toc-number">3.</span> <span class="toc-text">Introduction</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#What-is-Garbage-Collection"><span class="toc-number">3.1.</span> <span class="toc-text">What is Garbage Collection?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Goals-and-non-goals"><span class="toc-number">3.2.</span> <span class="toc-text">Goals and non-goals</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#LLVM-IR-Features"><span class="toc-number">4.</span> <span class="toc-text">LLVM IR Features</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Specifying-GC-code-generation-gc-quot-quot"><span class="toc-number">4.1.</span> <span class="toc-text">Specifying GC code generation: gc &quot;...&quot;</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Identifying-GC-roots-on-the-stack"><span class="toc-number">4.2.</span> <span class="toc-text">Identifying GC roots on the stack</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Using-gc-safepoint"><span class="toc-number">4.2.1.</span> <span class="toc-text">Using gc.safepoint</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Using-llvm-gcwrite"><span class="toc-number">4.2.2.</span> <span class="toc-text">Using llvm.gcwrite</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Reading-and-writing-references-in-the-heap"><span class="toc-number">4.3.</span> <span class="toc-text">Reading and writing references in the heap</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Write-barrier-llvm-gcwrite"><span class="toc-number">4.3.1.</span> <span class="toc-text">Write barrier: llvm.gcwrite</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Read-barrier-llvm-gcread"><span class="toc-number">4.3.2.</span> <span class="toc-text">Read barrier: llvm.gcread</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Built-In-GC-Strategies"><span class="toc-number">5.</span> <span class="toc-text">Built In GC Strategies</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#The-Shadow-Stack-GC"><span class="toc-number">5.1.</span> <span class="toc-text">The Shadow Stack GC</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#The-‘Erlang’-and-‘Ocaml’-GCs"><span class="toc-number">5.2.</span> <span class="toc-text">The ‘Erlang’ and ‘Ocaml’ GCs</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#The-Statepoint-Example-GC"><span class="toc-number">5.3.</span> <span class="toc-text">The Statepoint Example GC</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#The-CoreCLR-GC"><span class="toc-number">5.4.</span> <span class="toc-text">The CoreCLR GC</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Custom-GC-Strategies"><span class="toc-number">6.</span> <span class="toc-text">Custom GC Strategies</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Collector-Requirements"><span class="toc-number">6.1.</span> <span class="toc-text">Collector Requirements</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Implementing-a-collector-plugin"><span class="toc-number">6.2.</span> <span class="toc-text">Implementing a collector plugin</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Overview-of-available-features"><span class="toc-number">6.3.</span> <span class="toc-text">Overview of available features</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Computing-stack-maps"><span class="toc-number">6.4.</span> <span class="toc-text">Computing stack maps</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Initializing-roots-to-null"><span class="toc-number">6.5.</span> <span class="toc-text">Initializing roots to null</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Custom-lowering-of-intrinsics"><span class="toc-number">6.6.</span> <span class="toc-text">Custom lowering of intrinsics</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Generating-safe-points"><span class="toc-number">6.7.</span> <span class="toc-text">Generating safe points</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Emitting-assembly-code-GCMetadataPrinter"><span class="toc-number">6.8.</span> <span class="toc-text">Emitting assembly code: GCMetadataPrinter</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#References"><span class="toc-number">7.</span> <span class="toc-text">References</span></a></li></ol>
+    </div>
+    
+    <div class="back-top iconfont-archer">&#xe639;</div>
+    <div class="sidebar sidebar-hide">
+    <ul class="sidebar-tabs sidebar-tabs-active-0">
+        <li class="sidebar-tab-archives"><span class="iconfont-archer">&#xe67d;</span><span class="tab-name">Archive</span></li>
+        <li class="sidebar-tab-tags"><span class="iconfont-archer">&#xe61b;</span><span class="tab-name">Tag</span></li>
+        <li class="sidebar-tab-categories"><span class="iconfont-archer">&#xe666;</span><span class="tab-name">Cate</span></li>
+    </ul>
+    <div class="sidebar-content sidebar-content-show-archive">
+          <div class="sidebar-panel-archives">
+    <!-- 在ejs中将archive按照时间排序 -->
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="total-and-search">
+        <div class="total-archive">
+        Total : 5
+        </div>
+        <!-- search  -->
+        
+            <div class="site-search popup-trigger">
+                <span class="iconfont-archer search-icon">&#xe627;</span>
+            </div>
+        
+    </div>
+    
+    <div class="post-archive">
+    
+    
+    
+    
+    <div class="archive-year"> 2020 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">10/28</span><a class="archive-post-title" href= "/2020/10/28/Garbage-Collection-based-on-LLVM/" >Garbage Collection with LLVM</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/12</span><a class="archive-post-title" href= "/2020/02/12/Python%E7%9A%84%E4%BA%A4%E4%BA%92%E5%BC%8F/" >Python的交互式介绍</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/07</span><a class="archive-post-title" href= "/2020/02/07/Swift-REPL%E6%A8%A1%E5%BC%8F%E4%BB%8B%E7%BB%8D/" >Swift REPL模式介绍</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/29</span><a class="archive-post-title" href= "/2020/01/29/%E5%9F%BA%E4%BA%8EHexo%E5%92%8Cgithub-page%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/" >基于Hexo和github page搭建个人博客</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> Invalid date </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">Invalid date</span><a class="archive-post-title" href= "/2020/12/02/30-Years-Later-QBasic-Is-Still-The-Best-%E8%AF%91%E6%96%87/" >30-Years-Later-QBasic-Is-Still-The-Best-译文</a>
+        </li>
+    
+    </div>
+  </div>
+        <div class="sidebar-panel-tags">
+    <div class="sidebar-tags-name">
+    
+        <span class="sidebar-tag-name" data-tags="Compiler"><span class="iconfont-archer">&#xe606;</span>Compiler</span>
+    
+        <span class="sidebar-tag-name" data-tags="Python"><span class="iconfont-archer">&#xe606;</span>Python</span>
+    
+        <span class="sidebar-tag-name" data-tags="Swift"><span class="iconfont-archer">&#xe606;</span>Swift</span>
+    
+        <span class="sidebar-tag-name" data-tags="小白"><span class="iconfont-archer">&#xe606;</span>小白</span>
+    
+        <span class="sidebar-tag-name" data-tags="Garbage Collection"><span class="iconfont-archer">&#xe606;</span>Garbage Collection</span>
+    
+        <span class="sidebar-tag-name" data-tags="LLVM"><span class="iconfont-archer">&#xe606;</span>LLVM</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
+    <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
+    缺失模块。<br/>
+    1、请确保node版本大于6.2<br/>
+    2、在博客根目录（注意不是archer根目录）执行以下命令：<br/>
+    <span style="color: #f75357; font-size: 1rem; line-height: 2rem;">npm i hexo-generator-json-content --save</span><br/>
+    3、在根目录_config.yml里添加配置：
+    <pre style="color: #787878; font-size: 0.6rem;">
+jsonContent:
+  meta: false
+  pages: false
+  posts:
+    title: true
+    date: true
+    path: true
+    text: false
+    raw: false
+    content: false
+    slug: false
+    updated: false
+    comments: false
+    link: false
+    permalink: false
+    excerpt: false
+    categories: true
+    tags: true</pre>
+    </div> 
+    <div class="sidebar-tags-list"></div>
+</div>
+        <div class="sidebar-panel-categories">
+    <div class="sidebar-categories-name">
+    
+    </div>
+    <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
+    <div class="sidebar-categories-list"></div>
+</div>
+    </div>
+</div> 
+    <script>
+    var siteMeta = {
+        root: "/",
+        author: "Chino Mars"
+    }
+</script>
+    <!-- CDN failover -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+    <script type="text/javascript">
+        if (typeof window.$ === 'undefined')
+        {
+            console.warn('jquery load from jsdelivr failed, will load local script')
+            document.write('<script src="/lib/jquery.min.js">\x3C/script>')
+        }
+    </script>
+    <script src="/scripts/main.js"></script>
+    <!-- algolia -->
+    
+        <div class="site-search">
+  <div class="algolia-popup popup">
+    <div class="algolia-search">
+      <div class="algolia-search-input-icon">
+        <i class="fa fa-search"></i>
+      </div>
+      <div class="algolia-search-input" id="algolia-search-input"></div>
+    </div>
+
+    <div class="algolia-results">
+      <div id="algolia-stats"></div>
+      <div id="algolia-hits"></div>
+      <div id="algolia-pagination" class="algolia-pagination"></div>
+    </div>
+
+    <span class="popup-btn-close">
+      <i class="iconfont-archer">&#xe609;</i>
+    </span>
+  </div>
+</div>
+        <script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.8.0/dist/instantsearch.min.js" defer></script>
+        <script src="/scripts/search.js" defer></script>
+    
+    <!-- busuanzi  -->
+    
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- CNZZ  -->
+    
+    </div>
+    <!-- async load share.js -->
+    
+        <script src="/scripts/share.js" async></script>    
+     
+    </body>
+</html>
+
+

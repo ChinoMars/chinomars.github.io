@@ -22,7 +22,7 @@
     <meta name="description" content="An untypical developer">
     <meta http-equiv="Cache-control" content="no-cache">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
-    <title>About Me · Chino&#39;s Workspace</title>
+    <title>Chino&#39;s Workspace</title>
     <style type="text/css">
     @font-face {
         font-family: 'Oswald-Regular';
@@ -219,8 +219,6 @@
 </head>
 
     
-        <body class="about-body">
-    
     
 <header class="header">
 
@@ -238,22 +236,16 @@
 
 
 
-
-height:50vh;
 ">
     
     <!-- 主页  -->
-    
-    
             
     <div class="site-intro-placeholder"></div>
-    <div class="site-intro-img" style="background-image: url(/intro/index-bg.jpg)"></div>
+    <div class="site-intro-img" style="background-image: url(/)"></div>
     <div class="site-intro-meta">
         <!-- 标题  -->
         <h1 class="intro-title">
             <!-- 主页  -->
-            
-            About Me
             
         </h1>
         <!-- 副标题 -->
@@ -362,19 +354,82 @@ height:50vh;
 </script>        
         <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
         <div class="container container-unloaded">
-            <!-- 不可以删除，否则会调用post的layout  -->
-<main class="main about-page">
-    <article class="article-entry">
-        <p>I’m a member of a language design and develop team recently.</p>
-<p>I’m interested in <em>Programming Language</em> and <em>Compiler</em>, and enjoy sharing. Suggestions and comments are very welcome, please contact me through email.</p>
-<hr>
-<p>To do list for this site:</p>
-<ul>
-<li><input disabled="" type="checkbox"> add comment system</li>
-<li><input disabled="" type="checkbox"> feel a little bit uncomfortable for the base64 encoded URL shown at the end of the post when the title of blog is in chinese</li>
-</ul>
+            <main class="main index-page">
+    
+    
+    
+    
+    
+    
+    <article class="index-post">
+        <a class="abstract-title" href = "/2020/02/12/Python%E7%9A%84%E4%BA%A4%E4%BA%92%E5%BC%8F/" >
+            
+                <span>Python的交互式介绍</span>
+        </a>
+        <div class="abstract-content">
+            概要Python是一种解释型语言，通过解释器对代码进行逐行执行，一般的解释器也是这样实现，当然也存在一些优化方法，对代码进行JIT编译，提高执行速度。所以Python的REPL可以说是原生支持的。
+Python语言有多种解释器，例如：
 
+CPython：C语言实现的Python解释器，一般情况下在Terminal中执行命令python，就会调用CPython解释器执行代码
+PyPy：前面提到的通过JIT技术提升Python代码执行速度
+IPython：Python的交互式解释器，底层也是通过调用CPython对代码进行解释执行
+
+回到主题REPL，我们可以以IPython为入口进行分析，...
+        </div>
+        <div class="abstract-post-meta">
+            <!-- date  -->
+            <div class="abstract-date">
+                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2020/02/12</span>
+            </div>
+            <!-- tags  -->
+            
+            <div class= abstract-tags >
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "Compiler">Compiler</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "Python">Python</a>
+    
+</div>
+            
+        </div>
     </article>
+    
+    
+    
+    
+    
+    
+    <article class="index-post">
+        <a class="abstract-title" href = "/2020/02/07/Swift-REPL%E6%A8%A1%E5%BC%8F%E4%BB%8B%E7%BB%8D/" >
+            
+                <span>Swift REPL模式介绍</span>
+        </a>
+        <div class="abstract-content">
+            技术路线在IR层面支持REPL，提供swift解释器，swift提供了编译器runtime，提供基础的词法分析、语法分析、IR生成能力，并可基于llvm ir进行表达式eval，通过JIT的方式在解释器中支持REPL。
+源码分析
+头文件：include/swift/Immediate/Immediate.h，包含两个接口
+12345int RunImmediately(CompilerInstance &amp;CI, const ProcessCmdLine &amp;CmdLine,                     const IRGenOptions &amp;IRGenO...
+        </div>
+        <div class="abstract-post-meta">
+            <!-- date  -->
+            <div class="abstract-date">
+                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2020/02/07</span>
+            </div>
+            <!-- tags  -->
+            
+            <div class= abstract-tags >
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "Compiler">Compiler</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "Swift">Swift</a>
+    
+</div>
+            
+        </div>
+    </article>
+    
+    <!-- paginator  -->
+    
 </main>
             <!-- profile -->
             

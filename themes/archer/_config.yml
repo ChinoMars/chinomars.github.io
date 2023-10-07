@@ -38,16 +38,16 @@ about:
 
 # ========== Site ========== #
 # title of the site (good for SEO)
-SEO_title: Chino's Workspace
+SEO_title: Chino's Studio
 # keywords for site (good for SEO)
 SEO_keywords:
   - hexo
   - 'hexo-theme'
   - 'hexo-blog'
 # main title shown in header image
-main_title: Chino's Workspace
+main_title: Chino's Studio
 # subtitle
-subtitle: 独乐乐不如众乐乐
+subtitle: 取法乎上得其中，取法乎中得其下
 # site haeder image
 site_header_image: '/intro/index-bg.jpg'
 # post haeder image

@@ -4,7 +4,9 @@ date: 2020-01-30 00:43:30
 layout: about
 ---
 
-I'm interested in *Programming Language*, *Compiler Technology*, any hacking technology and sharing of course. In this blog, topics will not be limited, so tags will help to choose any thing interests you to read. Suggestions and comments are very welcome. Enjoy yourself.
+I'm a member of a language design and develop team recently.
+
+I'm interested in *Programming Language* and *Compiler*, and enjoy sharing. Suggestions and comments are very welcome, please contact me through email.
 
 ---
 
