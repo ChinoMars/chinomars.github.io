@@ -102,6 +102,7 @@ deploy:
   repo: http://github.com/ChinoMars/chinomars.github.io.git
   #repo: git@github.com:ChinoMars/chinomars.github.io.git
   branch: master
+  token: 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
 
 # Search setting
 algolia:
