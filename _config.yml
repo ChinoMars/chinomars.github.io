@@ -99,8 +99,8 @@ theme: archer
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
   type: git
-  #  repo: https://github.com/ChinoMars/chinomars.github.io.git
-  repo: git@github.com:ChinoMars/chinomars.github.io.git
+  repo: http://github.com/ChinoMars/chinomars.github.io.git
+  #repo: git@github.com:ChinoMars/chinomars.github.io.git
   branch: master
 
 # Search setting
