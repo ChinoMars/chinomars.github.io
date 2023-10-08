@@ -100,7 +100,7 @@ theme: archer
 deploy:
   type: git
   repo: git@github.com:ChinoMars/chinomars.github.io.git
-  branch: master
+  branch: gh-pages
 
 # Search setting
 algolia:
