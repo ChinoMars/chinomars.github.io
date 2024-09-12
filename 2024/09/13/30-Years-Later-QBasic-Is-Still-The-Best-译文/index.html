@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+    <!-- title -->
+
+
+
+
+<!-- keywords -->
+
+
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" >
+    <meta name="author" content="Chino Mars">
+    <meta name="renderer" content="webkit">
+    <meta name="copyright" content="Chino Mars">
+    
+    <meta name="keywords" content="hexo,hexo-theme,hexo-blog">
+    
+    <meta name="description" content="An untypical developer">
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <title>一篇不知道多久前翻译的译文--30年之后，QBasic依然是最棒的编程启蒙语言 · Mars Studio</title>
+    <style type="text/css">
+    @font-face {
+        font-family: 'Oswald-Regular';
+        src: url("/font/Oswald-Regular.ttf");
+    }
+
+    body {
+        margin: 0;
+    }
+
+    header,
+    footer,
+    .back-top,
+    .sidebar,
+    .container,
+    .site-intro-meta,
+    .toc-wrapper {
+        display: none;
+    }
+
+    .site-intro {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        /* height: 50vh; */
+        overflow: hidden;
+    }
+
+    .site-intro-placeholder {
+        position: absolute;
+        z-index: -2;
+        top: 0;
+        left: 0;
+        width: calc(100% + 300px);
+        height: 100%;
+        background: repeating-linear-gradient(-45deg, #444 0, #444 80px, #333 80px, #333 160px);
+        background-position: center center;
+        transform: translate3d(-226px, 0, 0);
+        animation: gradient-move 2.5s ease-out 0s infinite;
+    }
+
+    @keyframes gradient-move {
+        0% {
+            transform: translate3d(-226px, 0, 0);
+        }
+        100% {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+</style>
+
+    <link rel="preload" href= "/css/style.css?v=20180824" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <link rel="stylesheet" href= "/css/mobile.css?v=20180824" media="(max-width: 980px)">
+    
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    
+    <!-- /*! loadCSS. [c]2017 Filament Group, Inc. MIT License */
+/* This file is meant as a standalone workflow for
+- testing support for link[rel=preload]
+- enabling async CSS loading in browsers that do not support rel=preload
+- applying rel preload css once loaded, whether supported or not.
+*/ -->
+<script>
+(function( w ){
+	"use strict";
+	// rel=preload support test
+	if( !w.loadCSS ){
+		w.loadCSS = function(){};
+	}
+	// define on the loadCSS obj
+	var rp = loadCSS.relpreload = {};
+	// rel=preload feature support test
+	// runs once and returns a function for compat purposes
+	rp.support = (function(){
+		var ret;
+		try {
+			ret = w.document.createElement( "link" ).relList.supports( "preload" );
+		} catch (e) {
+			ret = false;
+		}
+		return function(){
+			return ret;
+		};
+	})();
+
+	// if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+	// then change that media back to its intended value on load
+	rp.bindMediaToggle = function( link ){
+		// remember existing media attr for ultimate state, or default to 'all'
+		var finalMedia = link.media || "all";
+
+		function enableStylesheet(){
+			link.media = finalMedia;
+		}
+
+		// bind load handlers to enable media
+		if( link.addEventListener ){
+			link.addEventListener( "load", enableStylesheet );
+		} else if( link.attachEvent ){
+			link.attachEvent( "onload", enableStylesheet );
+		}
+
+		// Set rel and non-applicable media type to start an async request
+		// note: timeout allows this to happen async to let rendering continue in IE
+		setTimeout(function(){
+			link.rel = "stylesheet";
+			link.media = "only x";
+		});
+		// also enable media after 3 seconds,
+		// which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+		setTimeout( enableStylesheet, 3000 );
+	};
+
+	// loop through link elements in DOM
+	rp.poly = function(){
+		// double check this to prevent external calls from running
+		if( rp.support() ){
+			return;
+		}
+		var links = w.document.getElementsByTagName( "link" );
+		for( var i = 0; i < links.length; i++ ){
+			var link = links[ i ];
+			// qualify links to those with rel=preload and as=style attrs
+			if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+				// prevent rerunning on link
+				link.setAttribute( "data-loadcss", true );
+				// bind listeners to toggle media back
+				rp.bindMediaToggle( link );
+			}
+		}
+	};
+
+	// if unsupported, run the polyfill
+	if( !rp.support() ){
+		// run once at least
+		rp.poly();
+
+		// rerun poly on an interval until onload
+		var run = w.setInterval( rp.poly, 500 );
+		if( w.addEventListener ){
+			w.addEventListener( "load", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		} else if( w.attachEvent ){
+			w.attachEvent( "onload", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		}
+	}
+
+
+	// commonjs
+	if( typeof exports !== "undefined" ){
+		exports.loadCSS = loadCSS;
+	}
+	else {
+		w.loadCSS = loadCSS;
+	}
+}( typeof global !== "undefined" ? global : this ) );
+</script>
+
+    <link rel="icon" href= "/assets/favicon.ico" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js" as="script" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" as="script" />
+    <link rel="preload" href="/scripts/main.js" as="script" />
+    <link rel="preload" as="font" href="/font/Oswald-Regular.ttf" crossorigin>
+    <link rel="preload" as="font" href="https://at.alicdn.com/t/font_327081_1dta1rlogw17zaor.woff" crossorigin>
+    
+        <!-- algolia -->
+        <script>
+            
+            var hits = JSON.parse('{"per_page":10}')
+            var labels = JSON.parse('{"input_placeholder":"Search for Posts","hits_empty":"We did not find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}')
+
+            var algolia = {
+                applicationID: 'XWV2HSZRUC',
+                apiKey: 'e4b6bee3d15bf2f01c6b8a02a7ff1be1',
+                indexName: 'personal-blog',
+                hits: hits,
+                labels: labels
+            }
+        </script>
+    
+    <!-- fancybox -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script>
+    <!-- 百度统计  -->
+    
+    <!-- 谷歌统计  -->
+    
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+    
+        <body class="post-body">
+    
+    
+<header class="header">
+
+    <div class="read-progress"></div>
+    <div class="header-sidebar-menu">&#xe775;</div>
+    <!-- post页的toggle banner  -->
+    
+    <div class="banner">
+            <div class="blog-title">
+                <a href="/" >Mars Studio</a>
+            </div>
+            <div class="post-title">
+                <a href="#" class="post-name">一篇不知道多久前翻译的译文--30年之后，QBasic依然是最棒的编程启蒙语言</a>
+            </div>
+    </div>
+    
+    <a class="home-link" href=/>Mars Studio</a>
+</header>
+    <div class="wrapper">
+        <div class="site-intro" style="
+
+
+
+
+
+
+
+height:50vh;
+">
+    
+    <!-- 主页  -->
+    
+    
+    <!-- 404页  -->
+            
+    <div class="site-intro-placeholder"></div>
+    <div class="site-intro-img" style="background-image: url(/intro/post-bg.jpg)"></div>
+    <div class="site-intro-meta">
+        <!-- 标题  -->
+        <h1 class="intro-title">
+            <!-- 主页  -->
+            
+            一篇不知道多久前翻译的译文--30年之后，QBasic依然是最棒的编程启蒙语言
+            <!-- 404 -->
+            
+        </h1>
+        <!-- 副标题 -->
+        <p class="intro-subtitle">
+            <!-- 主页副标题  -->
+            
+            
+            <!-- 404 -->
+            
+        </p>
+        <!-- 文章页meta -->
+        
+            <div class="post-intros">
+                <!-- 文章页标签  -->
+                
+                    <div class= post-intro-tags >
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "Programming Language">Programming Language</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "Misc">Misc</a>
+    
+</div>
+                
+                
+                    <div class="post-intro-read">
+                        <span>Word count: <span class="post-count word-count">4.2k</span>Reading time: <span class="post-count reading-time">15 mins. min</span></span>
+                    </div>
+                
+                <div class="post-intro-meta">
+                    <span class="post-intro-calander iconfont-archer">&#xe676;</span>
+                    <span class="post-intro-time">2024/09/13</span>
+                    
+                    <span id="busuanzi_container_page_pv" class="busuanzi-pv">
+                        <span class="iconfont-archer">&#xe602;</span>
+                        <span id="busuanzi_value_page_pv"></span>
+                    </span>
+                    
+                    <span class="shareWrapper">
+                        <span class="iconfont-archer shareIcon">&#xe71d;</span>
+                        <span class="shareText">Share</span>
+                        <ul class="shareList">
+                            <li class="iconfont-archer share-qr" data-type="qr">&#xe75b;
+                                <div class="share-qrcode"></div>
+                            </li>
+                            <li class="iconfont-archer" data-type="weibo">&#xe619;</li>
+                            <li class="iconfont-archer" data-type="qzone">&#xe62e;</li>
+                            <li class="iconfont-archer" data-type="twitter">&#xe634;</li>
+                            <li class="iconfont-archer" data-type="facebook">&#xe67a;</li>
+                        </ul>
+                    </span>
+                </div>
+            </div>
+        
+    </div>
+</div>
+        <script>
+ 
+  // get user agent
+  var browser = {
+    versions: function () {
+      var u = window.navigator.userAgent;
+      return {
+        userAgent: u,
+        trident: u.indexOf('Trident') > -1, //IE内核
+        presto: u.indexOf('Presto') > -1, //opera内核
+        webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+        gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核
+        mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+        ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+        android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或者uc浏览器
+        iPhone: u.indexOf('iPhone') > -1 || u.indexOf('Mac') > -1, //是否为iPhone或者安卓QQ浏览器
+        iPad: u.indexOf('iPad') > -1, //是否为iPad
+        webApp: u.indexOf('Safari') == -1, //是否为web应用程序，没有头部与底部
+        weixin: u.indexOf('MicroMessenger') == -1, //是否为微信浏览器
+        uc: u.indexOf('UCBrowser') > -1 //是否为android下的UC浏览器
+      };
+    }()
+  }
+  console.log("userAgent:" + browser.versions.userAgent);
+
+  // callback
+  function fontLoaded() {
+    console.log('font loaded');
+    if (document.getElementsByClassName('site-intro-meta')) {
+      document.getElementsByClassName('intro-title')[0].classList.add('intro-fade-in');
+      document.getElementsByClassName('intro-subtitle')[0].classList.add('intro-fade-in');
+      var postIntros = document.getElementsByClassName('post-intros')[0]
+      if (postIntros) {
+        postIntros.classList.add('post-fade-in');
+      }
+    }
+  }
+
+  // UC不支持跨域，所以直接显示
+  function asyncCb(){
+    if (browser.versions.uc) {
+      console.log("UCBrowser");
+      fontLoaded();
+    } else {
+      WebFont.load({
+        custom: {
+          families: ['Oswald-Regular']
+        },
+        loading: function () {  //所有字体开始加载
+          // console.log('loading');
+        },
+        active: function () {  //所有字体已渲染
+          fontLoaded();
+        },
+        inactive: function () { //字体预加载失败，无效字体或浏览器不支持加载
+          console.log('inactive: timeout');
+          fontLoaded();
+        },
+        timeout: 5000 // Set the timeout to two seconds
+      });
+    }
+  }
+
+  function asyncErr(){
+    console.warn('script load from CDN failed, will load local script')
+  }
+
+  // load webfont-loader async, and add callback function
+  function async(u, cb, err) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (cb) { o.addEventListener('load', function (e) { cb(null, e); }, false); }
+    if (err) { o.addEventListener('error', function (e) { err(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+
+  var asyncLoadWithFallBack = function(arr, success, reject) {
+      var currReject = function(){
+        reject()
+        arr.shift()
+        if(arr.length)
+          async(arr[0], success, currReject)
+        }
+
+      async(arr[0], success, currReject)
+  }
+
+  asyncLoadWithFallBack([
+    "https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js", 
+    "https://cdn.bootcss.com/webfont/1.6.28/webfontloader.js",
+    "/lib/webfontloader.min.js"
+  ], asyncCb, asyncErr)
+</script>        
+        <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
+        <div class="container container-unloaded">
+            <main class="main post-page">
+    <article class="article-entry">
+        <h1 id="译文：《30年之后，QBasic依然是最棒的编程启蒙语言》"><a href="#译文：《30年之后，QBasic依然是最棒的编程启蒙语言》" class="headerlink" title="译文：《30年之后，QBasic依然是最棒的编程启蒙语言》"></a>译文：《30年之后，QBasic依然是最棒的编程启蒙语言》</h1><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>现在是北京时间2024年9月13日0点18分，本来是想随便聊聊最近的工作和生活，突然发现drafts目录里有一篇存货，仔细一看原来是不知道什么时候翻译的一篇英文博客。仔细回忆了一下，应该是某个技术自媒体的网友说可以尝试翻译一下投稿，过审了会有稿费。当然，既然是在自己的博客出现，显然是没有过审，看来自己的翻译能力还有待提高，请读者海涵。</p>
+<h2 id="译文"><a href="#译文" class="headerlink" title="译文"></a>译文</h2><p><em>原文链接：<a target="_blank" rel="noopener" href="http://www.nicolasbize.com/blog/30-years-later-qbasic-is-still-the-best/">http://www.nicolasbize.com/blog/30-years-later-qbasic-is-still-the-best/</a>   translated by Ti</em></p>
+<p><em>May 5, 2016 by Nicolas Bize</em></p>
+<p>我的大儿子Noah三个月前刚满7岁。在他这个年龄，让他和家人们玩两个小时的《我的世界》也能让他激动得心跳加速。除了《我的世界》之外，他最爱的游戏还有《超级马里奥制造》。看到孩子玩这款游戏也常让我想起自己在这个年龄时的样子，真是令人激动啊。大约5个月之前，我远离家人和朋友去参加一年一度的<a target="_blank" rel="noopener" href="http://ludumdare.com/compo/">ludum dare</a><sup>[1]</sup>挑战。和往常一样，我会远离朋友和家人，甚至回到原始的穴居人状态，历时48小时不眠不休地从零开发一款游戏（文章末尾提供了链接，欢迎体验）。当我自豪地向我爱人展示我的“史诗级AAA大作”时，Noah也对编程世界产生了兴趣。于是我向这个不到7岁的孩子简单演示了这些简单的英文单词是如何构建起一个复杂游戏的。从那天起，Noah就开始反复地求我教他如何制作属于他自己的电子游戏。从那天开始，在之后5个月的时间里，我不断地寻找儿童编程语言和IDE的圣杯，渴望着能够将孩子的这种兴趣的火花，变成一段难忘的经历……</p>
+<p>为了达成这个目标，我把目光延伸到了无穷无尽的技术社区。在技术论坛和社区里，技术爱好者们向我提出了不少建议，我也尝试了无数种“儿童编程语言”，例如：SmallBasic，Pico-8，Smalltalk，Scratch等等。我甚至还求助了“万能”的StackOverflow，却都一无所获。5个月之后，我寻找儿童编程语言圣杯的愿望无疾而终，我被迫接受一个非常悲观的事实：30年过去了，QBasic仍然是最适合于编程启蒙的语言，且没有之一。</p>
+<blockquote>
+<p>“天呐，请别教他GOTO！”</p>
+</blockquote>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">10 PRINT “OH NO, WHAT ARE YOU DOING?!!!”</span><br><span class="line">20 GOTO 10</span><br></pre></td></tr></table></figure>
+
+<p>是的，QBasic确实是一门相当糟糕的过程式编程语言。它将被广泛认为不好的语言特性介绍给所有学习这门语言的人，包括隐式声明语法，不区分大小写，使用non-zero-based<sup>[2]</sup>计数等等。学习编程，最好的做法是从一开始就养成良好的习惯，而非多年之后再来纠正那些不良实践。按照这个逻辑，可能应该从我最爱的Ruby语言开始学习编程。然而，即便QBasic有许多在现在看来不是很恰当的语言特性，但QBasic具备的这些特性，都遵循着一个非常明确的设计目标：保持语言的简单性和易用性，而其他语言常常为了保证灵活性、一定的复杂度和逻辑性抛弃了这两个目标。</p>
+<p>我在Noah的11’’ HP Stream上安装了QBasic，这个过程中还不得不使用了一些DosBox的破解手段。接着Noah双击图标，进入了IDE的介绍界面，这勾起了我很多回忆：</p>
+<p><img src="https://upload.wikimedia.org/wikipedia/en/0/01/QBasic_Opening_Screen.png" alt="img"></p>
+<p>接下来，我向Noah介绍了每一位编程初学者的“神圣的仪式“：开发一个向这个圈子里其他同伴问好的程序。他慢慢地摸索着每一个按键，用右手手指小心翼翼地敲出了一串字符：<code>PRINT &quot;hello world&quot;</code></p>
+<p>他按下了<em>F5</em>键，当他看到自己的代码被编译、渲染到一片漆黑的屏幕上时，Noah显得非常惊喜。他欢笑着给了他老爹一个high-five，然后赶紧把电脑中刚刚敲下的代码抄录到了自己的笔记本上，为了防止自己忘记。</p>
+<p><img src="http://nicolasbize.com/blog/images/noah_1.jpg" alt="img"></p>
+<p>我们继续学习了其他指令：<code>CLS, COLOR, PLAY, INPUT</code>和<code>IF</code>。全程无需任何多余的解释，没有任何复杂度，没有生涩的操作符，没有抽象概念，没有必须仔细阅读的文档和手册，没有<em>object&#x2F;class&#x2F;method</em>等高级概念，不用安装任何开发框架，IDE中也没有大片的菜单和按钮，也没有特殊的单词和括号。一切仅仅是格式简单的纯代码。</p>
+<p>不到1个小时，Noah就独立地写出了一个程序——一个交互式的，非常微妙的小程序，这个程序让你明白了计算机对你作为一个有情感的人类个体的感受。</p>
+<p><img src="http://nicolasbize.com/blog/images/noah_3.jpg" alt="img"></p>
+<p>随后他立马邀请来他最好的朋友Christian，并把程序运行给他看，极其自豪。</p>
+<p><img src="http://nicolasbize.com/blog/images/noah_4.jpg" alt="img"></p>
+<p>Noah甚至还给好朋友简单地介绍了这个程序的是如何运行的，以及这些代码的含义！</p>
+<p><img src="http://nicolasbize.com/blog/images/noah_5.jpg" alt="img"></p>
+<p>在这一个小时中，我这年龄才7岁的儿子不仅学会了写第一个纯文本交互游戏，还体验了创造的乐趣和激动，编译并运行了他那个小程序。更值得表演的是，他还将全部的学习成果记录在了笔记本上，这个习惯非常不错：</p>
+<p><img src="http://nicolasbize.com/blog/images/noah_2.jpg" alt="img"></p>
+<p>我很开心的是，今天Noah终于体会到了他爸爸一直在说的“我做着全世界最棒的工作”。而我唯一感到遗憾的是认识到了一个悲观的现实，经过了30多年，我们仍然没有创造出对于儿童编程更适合的编程语言：QBasic只有非常有限的关键字（全部的帮助文档只需一个<em>F1</em>屏，并且还能附上简单的示例），没有任何让程序员分心的可视化组件，具有非常紧凑的开发环境，它能尽可能早地报错，使用简单的一键式编译和运行。这么多年来，我们创造出了更稳定、更复杂的语言&#x2F;框架&#x2F;IDE。诚然，对于现实真正的应用开发而言，足够的稳定性和复杂度是必须的，但我们还是没能创造出比QBasic更简单、更容易让初学者感受到编程的快乐的语言。而且在“现代化”的软件生态和环境中，让新手用现代计算机（Mac&#x2F;PC&#x2F;Linux）去运行QBasic也变得让人感到恐惧，放在当年，只需要将一个3.5英寸的磁盘插入硬盘驱动即可······</p>
+<p>不论如何，今天值得庆祝的是，又有一位新朋友发现了编程的快乐与美丽！欢呼～</p>
+<p>（按照文章开头的约定，欢迎体验<a target="_blank" rel="noopener" href="http://nicolasbize.com/ld34/">我的AAA大作</a>，而我，就等着EA来向我够买版权了）</p>
+<p>译者注：</p>
+<p>[1] Ludam Dare：Ludam Dare是一个世界级的在线、快速游戏开发挑战活动。要求参与者利用一个周末的时间，基于赛前社区票选出的主题，从零开始制作一款游戏。</p>
+<p>[2] Non-zero-based：Zero-based是一种从0开始的计数方法，相反Non-zero-based计数法是从非零数开始计数，例如从1开始。严格来讲从0开始或从1开始计数并没有对和错之分，但在计算机领域尤其是在编程语言领域，从0开始计数是一个比较常见的惯例，大部分具有一定影响力的编程语言也是这么设计的。</p>
+
+    </article>
+    <!-- license  -->
+    
+        <div class="license-wrapper">
+            <p>Author：<a href="https://chinomars.com">Chino Mars</a>
+            <p>原文链接：<a href="https://chinomars.com/2024/09/13/30-Years-Later-QBasic-Is-Still-The-Best-%E8%AF%91%E6%96%87/">https://chinomars.com/2024/09/13/30-Years-Later-QBasic-Is-Still-The-Best-%E8%AF%91%E6%96%87/</a>
+            <p>发表日期：<a href="https://chinomars.com/2024/09/13/30-Years-Later-QBasic-Is-Still-The-Best-%E8%AF%91%E6%96%87/">September 13th 2024, 12:18:11 am</a>
+            <p>更新日期：<a href="https://chinomars.com/2024/09/13/30-Years-Later-QBasic-Is-Still-The-Best-%E8%AF%91%E6%96%87/">September 13th 2024, 12:22:20 am</a>
+            <p>版权声明：本文采用<a rel="license noopener" target="_blank" href="http://creativecommons.org/licenses/by-nc/4.0/">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可</p>
+        </div>
+    
+    <!-- paginator  -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+        </li>
+        <li class="previous">
+            
+                <div class="prevSlogan">Previous Post</div>
+                <a href= "/2020/02/12/Python%E7%9A%84%E4%BA%A4%E4%BA%92%E5%BC%8F/" title= "REPL技术分析——Python的交互式">
+                    <div class="prevTitle">REPL技术分析——Python的交互式</div>
+                </a>
+            
+        </li>
+    </ul>
+    <!-- 评论插件 -->
+    <!-- 来必力City版安装代码 -->
+
+    <div id="lv-container" data-id="city" data-uid= MTAyMC80ODQzMi8yNDkyNg==>
+        <script type="text/javascript">
+            (function (d, s) {
+                var j, e = d.getElementsByTagName(s)[0];
+                if (typeof LivereTower === 'function') { return; }
+                j = d.createElement(s);
+                j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+                j.async = true;
+
+                e.parentNode.insertBefore(j, e);
+            })(document, 'script');
+        </script>
+        <noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+    </div>
+
+<!-- City版安装代码已完成 -->
+    
+    
+    <!-- partial('_partial/comment/changyan') -->
+    <!--PC版-->
+
+
+    
+    
+
+    <!-- 评论 -->
+</main>
+            <!-- profile -->
+            
+        </div>
+        <footer class="footer footer-unloaded">
+    <!-- social  -->
+    
+    <div class="social">
+        
+    
+        
+            
+                <a href="mailto:chinomars@163.com" class="iconfont-archer email" title=email ></a>
+            
+        
+    
+        
+            
+                <a href="//github.com/ChinoMars" class="iconfont-archer github" target="_blank" title=github></a>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+                <a href="/atom.xml" class="iconfont-archer rss" target="_blank" title=rss></a>
+            
+        
+    
+
+    </div>
+    
+    <!-- powered by Hexo  -->
+    <div class="copyright">
+        <span id="hexo-power">Powered by <a href="https://hexo.io/" target="_blank">Hexo</a></span><span class="iconfont-archer power">&#xe635;</span><span id="theme-info">theme <a href="https://github.com/fi3ework/hexo-theme-archer" target="_blank">Archer</a></span>
+    </div>
+    <!-- 不蒜子  -->
+    
+    <div class="busuanzi-container">
+    
+     
+    <span id="busuanzi_container_site_pv">PV: <span id="busuanzi_value_site_pv"></span> :)</span>
+    
+    </div>
+    
+</footer>
+    </div>
+    <!-- toc -->
+    
+    <div class="toc-wrapper" style=
+    
+
+
+
+
+
+
+
+top:50vh;
+
+    >
+        <div class="toc-catalog">
+            <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
+        </div>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%AF%91%E6%96%87%EF%BC%9A%E3%80%8A30%E5%B9%B4%E4%B9%8B%E5%90%8E%EF%BC%8CQBasic%E4%BE%9D%E7%84%B6%E6%98%AF%E6%9C%80%E6%A3%92%E7%9A%84%E7%BC%96%E7%A8%8B%E5%90%AF%E8%92%99%E8%AF%AD%E8%A8%80%E3%80%8B"><span class="toc-number">1.</span> <span class="toc-text">译文：《30年之后，QBasic依然是最棒的编程启蒙语言》</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-number">1.1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AF%91%E6%96%87"><span class="toc-number">1.2.</span> <span class="toc-text">译文</span></a></li></ol></li></ol>
+    </div>
+    
+    <div class="back-top iconfont-archer">&#xe639;</div>
+    <div class="sidebar sidebar-hide">
+    <ul class="sidebar-tabs sidebar-tabs-active-0">
+        <li class="sidebar-tab-archives"><span class="iconfont-archer">&#xe67d;</span><span class="tab-name">Archive</span></li>
+        <li class="sidebar-tab-tags"><span class="iconfont-archer">&#xe61b;</span><span class="tab-name">Tag</span></li>
+        <li class="sidebar-tab-categories"><span class="iconfont-archer">&#xe666;</span><span class="tab-name">Cate</span></li>
+    </ul>
+    <div class="sidebar-content sidebar-content-show-archive">
+          <div class="sidebar-panel-archives">
+    <!-- 在ejs中将archive按照时间排序 -->
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="total-and-search">
+        <div class="total-archive">
+        Total : 4
+        </div>
+        <!-- search  -->
+        
+            <div class="site-search popup-trigger">
+                <span class="iconfont-archer search-icon">&#xe627;</span>
+            </div>
+        
+    </div>
+    
+    <div class="post-archive">
+    
+    
+    
+    
+    <div class="archive-year"> 2024 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/13</span><a class="archive-post-title" href= "/2024/09/13/30-Years-Later-QBasic-Is-Still-The-Best-%E8%AF%91%E6%96%87/" >一篇不知道多久前翻译的译文--30年之后，QBasic依然是最棒的编程启蒙语言</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2020 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/12</span><a class="archive-post-title" href= "/2020/02/12/Python%E7%9A%84%E4%BA%A4%E4%BA%92%E5%BC%8F/" >REPL技术分析——Python的交互式</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/07</span><a class="archive-post-title" href= "/2020/02/07/Swift-REPL%E6%A8%A1%E5%BC%8F%E4%BB%8B%E7%BB%8D/" >REPL技术分析——Swift REPL模式</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">01/29</span><a class="archive-post-title" href= "/2020/01/29/%E5%9F%BA%E4%BA%8EHexo%E5%92%8Cgithub-page%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/" >基于Hexo和github page搭建个人博客</a>
+        </li>
+    
+    </div>
+  </div>
+        <div class="sidebar-panel-tags">
+    <div class="sidebar-tags-name">
+    
+        <span class="sidebar-tag-name" data-tags="Compiler"><span class="iconfont-archer">&#xe606;</span>Compiler</span>
+    
+        <span class="sidebar-tag-name" data-tags="Python"><span class="iconfont-archer">&#xe606;</span>Python</span>
+    
+        <span class="sidebar-tag-name" data-tags="Swift"><span class="iconfont-archer">&#xe606;</span>Swift</span>
+    
+        <span class="sidebar-tag-name" data-tags="小白"><span class="iconfont-archer">&#xe606;</span>小白</span>
+    
+        <span class="sidebar-tag-name" data-tags="Programming Language"><span class="iconfont-archer">&#xe606;</span>Programming Language</span>
+    
+        <span class="sidebar-tag-name" data-tags="Misc"><span class="iconfont-archer">&#xe606;</span>Misc</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
+    <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
+    缺失模块。<br/>
+    1、请确保node版本大于6.2<br/>
+    2、在博客根目录（注意不是archer根目录）执行以下命令：<br/>
+    <span style="color: #f75357; font-size: 1rem; line-height: 2rem;">npm i hexo-generator-json-content --save</span><br/>
+    3、在根目录_config.yml里添加配置：
+    <pre style="color: #787878; font-size: 0.6rem;">
+jsonContent:
+  meta: false
+  pages: false
+  posts:
+    title: true
+    date: true
+    path: true
+    text: false
+    raw: false
+    content: false
+    slug: false
+    updated: false
+    comments: false
+    link: false
+    permalink: false
+    excerpt: false
+    categories: true
+    tags: true</pre>
+    </div> 
+    <div class="sidebar-tags-list"></div>
+</div>
+        <div class="sidebar-panel-categories">
+    <div class="sidebar-categories-name">
+    
+    </div>
+    <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
+    <div class="sidebar-categories-list"></div>
+</div>
+    </div>
+</div> 
+    <script>
+    var siteMeta = {
+        root: "/",
+        author: "Chino Mars"
+    }
+</script>
+    <!-- CDN failover -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+    <script type="text/javascript">
+        if (typeof window.$ === 'undefined')
+        {
+            console.warn('jquery load from jsdelivr failed, will load local script')
+            document.write('<script src="/lib/jquery.min.js">\x3C/script>')
+        }
+    </script>
+    <script src="/scripts/main.js"></script>
+    <!-- algolia -->
+    
+        <div class="site-search">
+  <div class="algolia-popup popup">
+    <div class="algolia-search">
+      <div class="algolia-search-input-icon">
+        <i class="fa fa-search"></i>
+      </div>
+      <div class="algolia-search-input" id="algolia-search-input"></div>
+    </div>
+
+    <div class="algolia-results">
+      <div id="algolia-stats"></div>
+      <div id="algolia-hits"></div>
+      <div id="algolia-pagination" class="algolia-pagination"></div>
+    </div>
+
+    <span class="popup-btn-close">
+      <i class="iconfont-archer">&#xe609;</i>
+    </span>
+  </div>
+</div>
+        <script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.8.0/dist/instantsearch.min.js" defer></script>
+        <script src="/scripts/search.js" defer></script>
+    
+    <!-- busuanzi  -->
+    
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- CNZZ  -->
+    
+    </div>
+    <!-- async load share.js -->
+    
+        <script src="/scripts/share.js" async></script>    
+     
+    </body>
+</html>
+
+
