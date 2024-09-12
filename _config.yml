@@ -101,6 +101,7 @@ deploy:
   type: git
   repo: git@github.com:ChinoMars/chinomars.github.io.git
   branch: gh-pages
+  token: $GIT_TOKEN
 
 # Search setting
 algolia:
