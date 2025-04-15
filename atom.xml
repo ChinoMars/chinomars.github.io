@@ -6,7 +6,7 @@
   <link href="https://chinomars.com/atom.xml" rel="self"/>
   
   <link href="https://chinomars.com/"/>
-  <updated>2025-04-15T06:07:22.137Z</updated>
+  <updated>2025-04-15T06:05:51.625Z</updated>
   <id>https://chinomars.com/</id>
   
   <author>
@@ -15,32 +15,6 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
-  
-  <entry>
-    <title>Reinforcement Learning With Register Allocation</title>
-    <link href="https://chinomars.com/2025/04/13/reinforcement-leraning-with-register-allocation/"/>
-    <id>https://chinomars.com/2025/04/13/reinforcement-leraning-with-register-allocation/</id>
-    <published>2025-04-13T08:36:06.000Z</published>
-    <updated>2025-04-15T06:07:22.137Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="Reinforcement-Learning-With-Register-Allocation"><a href="#Reinforcement-Learning-With-Register-Allocation" class="headerlink" title="Reinforcement Learning With Register Allocation"></a>Reinforcement Learning With Register Allocation</h1><h2 id="Note-of-the-paper"><a href="#Note-of-the-paper" class="headerlink" title="Note of the paper"></a>Note of the paper</h2><h3 id="Mathematical-model"><a href="#Mathematical-model" class="headerlink" title="Mathematical model"></a>Mathematical model</h3><h4 id="Register-Constraint"><a href="#Register-Constraint" class="headerlink" title="Register Constraint"></a>Register Constraint</h4><ul><li>type constraint</li><li>congruence connstraint</li><li>inteference constraint</li></ul><h4 id="live-range-splitting-and-spilling"><a href="#live-range-splitting-and-spilling" class="headerlink" title="live range splitting and spilling"></a>live range splitting and spilling</h4><ul><li>spilling cost should be estimated and considered</li><li>live range splitting is used to shortten the liveness of a variable, which will release the physical register earlier</li></ul><h3 id="llvm-register-allocation"><a href="#llvm-register-allocation" class="headerlink" title="llvm register allocation"></a>llvm register allocation</h3><p>RA methods orderred from simple to complex:</p><ul><li>fast RA</li><li>basic RA</li><li>greedy RA</li><li>PBQP RA</li></ul><h3 id="multi-agent-hierarchical-RL"><a href="#multi-agent-hierarchical-RL" class="headerlink" title="multi-agent hierarchical RL"></a>multi-agent hierarchical RL</h3><p>fomulated the register allocation problem as a “Markov Decision Process” using “hierarchical reinforcement learning”, modeling the sub-tasks of reg alloc, which includes: task selection, splitting, coloring…, as lower level tasks controlled by multiple agents of RL</p><h3 id="Structure-of-the-ML-RA-pass"><a href="#Structure-of-the-ML-RA-pass" class="headerlink" title="Structure of the ML RA pass"></a>Structure of the ML RA pass</h3><h4 id="overview"><a href="#overview" class="headerlink" title="overview"></a>overview</h4><h5 id="llvm-pass"><a href="#llvm-pass" class="headerlink" title="llvm pass"></a>llvm pass</h5><ul><li>implemented MIR2Vec for ML component</li><li>generate interference graph using llvm infrastucture</li><li>execute split, spill and color as predicted by the ML agents</li></ul><h5 id="ML-part"><a href="#ML-part" class="headerlink" title="ML part"></a>ML part</h5><p>several agents for low level tasks:</p><ul><li>top level: <code>node selector</code> learns to pick a node from interference graph G<ul><li>mid level: <code>task selector</code> learns to select a task for the node selected<ul><li>low level: <code>splitter</code> learns to identify a split point k for the node</li><li>low level: <code>coloering</code> learns to pick valid color or <strong>spill</strong></li></ul></li></ul></li></ul><ol><li>coloring agent</li></ol><h2 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h2><ul><li><a href="https://arxiv.org/abs/2204.02013">RL4ReAl: Reinforcement Learning for Register Allocation</a></li></ul>]]></content>
-    
-    
-      
-      
-    <summary type="html">&lt;h1 id=&quot;Reinforcement-Learning-With-Register-Allocation&quot;&gt;&lt;a href=&quot;#Reinforcement-Learning-With-Register-Allocation&quot; class=&quot;headerlink&quot; title</summary>
-      
-    
-    
-    
-    
-    <category term="llvm" scheme="https://chinomars.com/tags/llvm/"/>
-    
-    <category term="reinforcement learning" scheme="https://chinomars.com/tags/reinforcement-learning/"/>
-    
-    <category term="register allocation" scheme="https://chinomars.com/tags/register-allocation/"/>
-    
-  </entry>
   
   <entry>
     <title>How to support debug on GPU - WIP</title>
