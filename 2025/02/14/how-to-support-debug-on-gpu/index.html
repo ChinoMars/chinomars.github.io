@@ -22,7 +22,7 @@
     <meta name="description" content="An untypical developer">
     <meta http-equiv="Cache-control" content="no-cache">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
-    <title>Mars Studio</title>
+    <title>How to support debug on GPU - WIP · Mars Studio</title>
     <style type="text/css">
     @font-face {
         font-family: 'Oswald-Regular';
@@ -219,12 +219,23 @@
 </head>
 
     
+        <body class="post-body">
+    
     
 <header class="header">
 
     <div class="read-progress"></div>
     <div class="header-sidebar-menu">&#xe775;</div>
     <!-- post页的toggle banner  -->
+    
+    <div class="banner">
+            <div class="blog-title">
+                <a href="/" >Mars Studio</a>
+            </div>
+            <div class="post-title">
+                <a href="#" class="post-name">How to support debug on GPU - WIP</a>
+            </div>
+    </div>
     
     <a class="home-link" href=/>Mars Studio</a>
 </header>
@@ -236,24 +247,78 @@
 
 
 
+
+height:50vh;
 ">
     
     <!-- 主页  -->
+    
+    
+    <!-- 404页  -->
             
     <div class="site-intro-placeholder"></div>
-    <div class="site-intro-img" style="background-image: url(/)"></div>
+    <div class="site-intro-img" style="background-image: url(/intro/post-bg.jpg)"></div>
     <div class="site-intro-meta">
         <!-- 标题  -->
         <h1 class="intro-title">
             <!-- 主页  -->
+            
+            How to support debug on GPU - WIP
+            <!-- 404 -->
             
         </h1>
         <!-- 副标题 -->
         <p class="intro-subtitle">
             <!-- 主页副标题  -->
             
+            
+            <!-- 404 -->
+            
         </p>
         <!-- 文章页meta -->
+        
+            <div class="post-intros">
+                <!-- 文章页标签  -->
+                
+                    <div class= post-intro-tags >
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "Micro-Arch">Micro-Arch</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "Debugging">Debugging</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "Heterogeneous Computing">Heterogeneous Computing</a>
+    
+</div>
+                
+                
+                    <div class="post-intro-read">
+                        <span>Word count: <span class="post-count word-count">2.6k</span>Reading time: <span class="post-count reading-time">9 mins. min</span></span>
+                    </div>
+                
+                <div class="post-intro-meta">
+                    <span class="post-intro-calander iconfont-archer">&#xe676;</span>
+                    <span class="post-intro-time">2025/02/14</span>
+                    
+                    <span id="busuanzi_container_page_pv" class="busuanzi-pv">
+                        <span class="iconfont-archer">&#xe602;</span>
+                        <span id="busuanzi_value_page_pv"></span>
+                    </span>
+                    
+                    <span class="shareWrapper">
+                        <span class="iconfont-archer shareIcon">&#xe71d;</span>
+                        <span class="shareText">Share</span>
+                        <ul class="shareList">
+                            <li class="iconfont-archer share-qr" data-type="qr">&#xe75b;
+                                <div class="share-qrcode"></div>
+                            </li>
+                            <li class="iconfont-archer" data-type="weibo">&#xe619;</li>
+                            <li class="iconfont-archer" data-type="qzone">&#xe62e;</li>
+                            <li class="iconfont-archer" data-type="twitter">&#xe634;</li>
+                            <li class="iconfont-archer" data-type="facebook">&#xe67a;</li>
+                        </ul>
+                    </span>
+                </div>
+            </div>
         
     </div>
 </div>
@@ -354,42 +419,74 @@
 </script>        
         <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
         <div class="container container-unloaded">
-            <main class="main index-page">
-    
-    
-    
-    
-    
-    
-    <article class="index-post">
-        <a class="abstract-title" href = "/2024/09/13/30-Years-Later-QBasic-Is-Still-The-Best-%E8%AF%91%E6%96%87/" >
-            
-                <span>一篇不知道多久前翻译的译文--30年之后，QBasic依然是最棒的编程启蒙语言</span>
-        </a>
-        <div class="abstract-content">
-            译文：《30年之后，QBasic依然是最棒的编程启蒙语言》前言现在是北京时间2024年9月13日0点18分，本来是想随便聊聊最近的工作和生活，突然发现drafts目录里有一篇存货，仔细一看原来是不知道什么时候翻译的一篇英文博客。仔细回忆了一下，应该是某个技术自媒体的网友说可以尝试翻译一下投稿，过审了会有稿费。当然，既然是在自己的博客出现，显然是没有过审，看来自己的翻译能力还有待提高，请读者海涵。
-译文原文链接：http://www.nicolasbize.com/blog/30-years-later-qbasic-is-still-the-best/   translated by T...
-        </div>
-        <div class="abstract-post-meta">
-            <!-- date  -->
-            <div class="abstract-date">
-                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2024/09/13</span>
-            </div>
-            <!-- tags  -->
-            
-            <div class= abstract-tags >
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags = "Programming Language">Programming Language</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags = "Misc">Misc</a>
-    
-</div>
-            
-        </div>
+            <main class="main post-page">
+    <article class="article-entry">
+        <h1 id="How-to-support-debug-on-GPU-WIP"><a href="#How-to-support-debug-on-GPU-WIP" class="headerlink" title="How to support debug on GPU - WIP"></a>How to support debug on GPU - WIP</h1><h2 id="Before-the-Sharing"><a href="#Before-the-Sharing" class="headerlink" title="Before the Sharing"></a>Before the Sharing</h2><p>First time to write a blog in English, worthy to memorize.</p>
+<p>Recently I’m interested by the debugging tech on heterogeneous computing system, CPU with GPU for example, especially the micro-arch design. I’m lucky that I was part of a developper toolchain team, I know a bunch of guys who are really familiar with debugging tech. </p>
+<p>In the beginning of 2018, our team were involved in the first NPU chip project of HUAWEI and we developed logging system(focusing on the software implementation), trace tool, IDE and the prototype of the debugger. Why was just a prototype, which is complicated and no comments here. Anyway, some guys were experts in that team, like my memtor Zheng. We communicated these days and concluded a brief design about the debugging system on GPU&#x2F;NPU system.</p>
+<h2 id="Background-of-Debugging"><a href="#Background-of-Debugging" class="headerlink" title="Background of Debugging"></a>Background of Debugging</h2><p>Basic debug actions include: setting breakpoints, running by step, veiwing variables information(type, address, temporary value). In this blog, I will focus on the hardware support requirements to the “breakpoint setting” and “running by step”.</p>
+<p>In CPU system, OS provides various of system interruptions to support debugging user’s applications. For example INT3 instruction of X86 help trigger a interrupt for the debugger, debugger will catch the signal and process following debugging action, like viewing the value of temporary variable. This is a software level breakpoint. And also there is a hardware way to set a breakpoint. Hardware may design several register for storing breakpoint address, which is the PC address. When polling the breakpoint registers and meeting the PC is equal to the value stored in the breakpoint register, the PC issue module will stop issuing, which implements break action of user’s program.</p>
+<h2 id="GPU-Design-for-supporting-Debugging"><a href="#GPU-Design-for-supporting-Debugging" class="headerlink" title="GPU Design for supporting Debugging"></a>GPU Design for supporting Debugging</h2><p>Both software and hardware ways to set a breakpoint, the hardware should support instruction level interrupt in the micro arch design.</p>
+
     </article>
+    <!-- license  -->
+    
+        <div class="license-wrapper">
+            <p>Author：<a href="https://chinomars.com">Chino Mars</a>
+            <p>原文链接：<a href="https://chinomars.com/2025/02/14/how-to-support-debug-on-gpu/">https://chinomars.com/2025/02/14/how-to-support-debug-on-gpu/</a>
+            <p>发表日期：<a href="https://chinomars.com/2025/02/14/how-to-support-debug-on-gpu/">February 14th 2025, 9:00:00 pm</a>
+            <p>更新日期：<a href="https://chinomars.com/2025/02/14/how-to-support-debug-on-gpu/">April 15th 2025, 2:05:51 pm</a>
+            <p>版权声明：本文采用<a rel="license noopener" target="_blank" href="http://creativecommons.org/licenses/by-nc/4.0/">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可</p>
+        </div>
     
     <!-- paginator  -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+                <div class="nextSlogan">Next Post</div>
+                <a href= "/2025/04/13/reinforcement-leraning-with-register-allocation/" title= "Reinforcement Learning With Register Allocation">
+                    <div class="nextTitle">Reinforcement Learning With Register Allocation</div>
+                </a>
+            
+        </li>
+        <li class="previous">
+            
+                <div class="prevSlogan">Previous Post</div>
+                <a href= "/2024/09/13/30-Years-Later-QBasic-Is-Still-The-Best-%E8%AF%91%E6%96%87/" title= "一篇不知道多久前翻译的译文--30年之后，QBasic依然是最棒的编程启蒙语言">
+                    <div class="prevTitle">一篇不知道多久前翻译的译文--30年之后，QBasic依然是最棒的编程启蒙语言</div>
+                </a>
+            
+        </li>
+    </ul>
+    <!-- 评论插件 -->
+    <!-- 来必力City版安装代码 -->
+
+    <div id="lv-container" data-id="city" data-uid= MTAyMC80ODQzMi8yNDkyNg==>
+        <script type="text/javascript">
+            (function (d, s) {
+                var j, e = d.getElementsByTagName(s)[0];
+                if (typeof LivereTower === 'function') { return; }
+                j = d.createElement(s);
+                j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+                j.async = true;
+
+                e.parentNode.insertBefore(j, e);
+            })(document, 'script');
+        </script>
+        <noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+    </div>
+
+<!-- City版安装代码已完成 -->
     
+    
+    <!-- partial('_partial/comment/changyan') -->
+    <!--PC版-->
+
+
+    
+    
+
+    <!-- 评论 -->
 </main>
             <!-- profile -->
             
@@ -471,6 +568,24 @@
 </footer>
     </div>
     <!-- toc -->
+    
+    <div class="toc-wrapper" style=
+    
+
+
+
+
+
+
+
+top:50vh;
+
+    >
+        <div class="toc-catalog">
+            <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
+        </div>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#How-to-support-debug-on-GPU-WIP"><span class="toc-number">1.</span> <span class="toc-text">How to support debug on GPU - WIP</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Before-the-Sharing"><span class="toc-number">1.1.</span> <span class="toc-text">Before the Sharing</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Background-of-Debugging"><span class="toc-number">1.2.</span> <span class="toc-text">Background of Debugging</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#GPU-Design-for-supporting-Debugging"><span class="toc-number">1.3.</span> <span class="toc-text">GPU Design for supporting Debugging</span></a></li></ol></li></ol>
+    </div>
     
     <div class="back-top iconfont-archer">&#xe639;</div>
     <div class="sidebar sidebar-hide">
@@ -748,6 +863,8 @@ jsonContent:
     
     </div>
     <!-- async load share.js -->
+    
+        <script src="/scripts/share.js" async></script>    
      
     </body>
 </html>
