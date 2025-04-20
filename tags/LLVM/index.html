@@ -362,35 +362,39 @@
     
     
     <article class="index-post">
-        <a class="abstract-title" href = "/2025/04/15/llvm-backend-practices-1/" >
+        <a class="abstract-title" href = "/2022/03/17/ISel/" >
             
-                <span>LLVM Backend Practices - Part 1</span>
+                <span>LLVM Note - Instruction Selection In LLVM</span>
         </a>
         <div class="abstract-content">
-            
+            Instruction Selection In LLVMInstruction Selection Method
+FastISel
+SelectionDAGISel
+GlobalISel
 
-LLVM Backend Practices - Part 1Register definition寄存器定义方面，目前想到这几点：
+related hooks, like how to specify which isel method to use
 
-lanebitmask length limitation for subregister definition
-register pressure calculation
+in TargetConfig::addCoreISelPasses will choose a valid isel method
 
-What is “LaneBitmask”llvm中使用LaneBitmask来表示一个物理寄存器的subregister的占用情况。
-PostEncoderMethodBackground一般情况下我们对于指令encoding采取传统的在指令定义的tablegen文件里，设置...
+FastISel
+llvm ir based
+fast
+used in O0
+
+workflowllvm ir -&gt; machine in...
         </div>
         <div class="abstract-post-meta">
             <!-- date  -->
             <div class="abstract-date">
-                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2025/04/15</span>
+                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2022/03/17</span>
             </div>
             <!-- tags  -->
             
             <div class= abstract-tags >
     
-        <a class="post-tag" href="javascript:void(0);" data-tags = "llvm">llvm</a>
+        <a class="post-tag" href="javascript:void(0);" data-tags = "Compiler">Compiler</a>
     
-        <a class="post-tag" href="javascript:void(0);" data-tags = "llvm-practice">llvm-practice</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags = "compiler">compiler</a>
+        <a class="post-tag" href="javascript:void(0);" data-tags = "LLVM">LLVM</a>
     
 </div>
             
