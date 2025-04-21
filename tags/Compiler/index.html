@@ -362,35 +362,111 @@
     
     
     <article class="index-post">
-        <a class="abstract-title" href = "/2025/04/15/llvm-backend-practices-1/" >
+        <a class="abstract-title" href = "/2022/03/17/ISel/" >
             
-                <span>LLVM Backend Practices - Part 1</span>
+                <span>LLVM Note - Instruction Selection In LLVM</span>
         </a>
         <div class="abstract-content">
-            
+            Instruction Selection In LLVMInstruction Selection Method
+FastISel
+SelectionDAGISel
+GlobalISel
 
-LLVM Backend Practices - Part 1Register definition寄存器定义方面，目前想到这几点：
+related hooks, like how to specify which isel method to use
 
-lanebitmask length limitation for subregister definition
-register pressure calculation
+in TargetConfig::addCoreISelPasses will choose a valid isel method
 
-What is “LaneBitmask”llvm中使用LaneBitmask来表示一个物理寄存器的subregister的占用情况。
-PostEncoderMethodBackground一般情况下我们对于指令encoding采取传统的在指令定义的tablegen文件里，设置...
+FastISel
+llvm ir based
+fast
+used in O0
+
+workflowllvm ir -&gt; machine in...
         </div>
         <div class="abstract-post-meta">
             <!-- date  -->
             <div class="abstract-date">
-                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2025/04/15</span>
+                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2022/03/17</span>
             </div>
             <!-- tags  -->
             
             <div class= abstract-tags >
     
-        <a class="post-tag" href="javascript:void(0);" data-tags = "llvm">llvm</a>
+        <a class="post-tag" href="javascript:void(0);" data-tags = "Compiler">Compiler</a>
     
-        <a class="post-tag" href="javascript:void(0);" data-tags = "llvm-practice">llvm-practice</a>
+        <a class="post-tag" href="javascript:void(0);" data-tags = "LLVM">LLVM</a>
     
-        <a class="post-tag" href="javascript:void(0);" data-tags = "compiler">compiler</a>
+</div>
+            
+        </div>
+    </article>
+    
+    
+    
+    
+    
+    
+    <article class="index-post">
+        <a class="abstract-title" href = "/2020/02/12/Python%E7%9A%84%E4%BA%A4%E4%BA%92%E5%BC%8F/" >
+            
+                <span>REPL技术分析——Python的交互式</span>
+        </a>
+        <div class="abstract-content">
+            概要Python是一种解释型语言，通过解释器对代码进行逐行执行，一般的解释器也是这样实现，当然也存在一些优化方法，对代码进行JIT编译，提高执行速度。所以Python的REPL可以说是原生支持的。
+Python语言有多种解释器，例如：
+
+CPython：C语言实现的Python解释器，一般情况下在Terminal中执行命令python，就会调用CPython解释器执行代码
+PyPy：前面提到的通过JIT技术提升Python代码执行速度
+IPython：Python的交互式解释器，底层也是通过调用CPython对代码进行解释执行
+
+回到主题REPL，我们可以以IPython为入口进行分析，...
+        </div>
+        <div class="abstract-post-meta">
+            <!-- date  -->
+            <div class="abstract-date">
+                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2020/02/12</span>
+            </div>
+            <!-- tags  -->
+            
+            <div class= abstract-tags >
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "Compiler">Compiler</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "Python">Python</a>
+    
+</div>
+            
+        </div>
+    </article>
+    
+    
+    
+    
+    
+    
+    <article class="index-post">
+        <a class="abstract-title" href = "/2020/02/07/Swift-REPL%E6%A8%A1%E5%BC%8F%E4%BB%8B%E7%BB%8D/" >
+            
+                <span>REPL技术分析——Swift REPL模式</span>
+        </a>
+        <div class="abstract-content">
+            技术路线在IR层面支持REPL，提供swift解释器，swift提供了编译器runtime，提供基础的词法分析、语法分析、IR生成能力，并可基于llvm ir进行表达式eval，通过JIT的方式在解释器中支持REPL。
+源码分析
+头文件：include/swift/Immediate/Immediate.h，包含两个接口
+12345int RunImmediately(CompilerInstance &amp;CI, const ProcessCmdLine &amp;CmdLine,                     const IRGenOptions &amp;IRGenO...
+        </div>
+        <div class="abstract-post-meta">
+            <!-- date  -->
+            <div class="abstract-date">
+                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2020/02/07</span>
+            </div>
+            <!-- tags  -->
+            
+            <div class= abstract-tags >
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "Compiler">Compiler</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "Swift">Swift</a>
     
 </div>
             
@@ -556,10 +632,6 @@ PostEncoderMethodBackground一般情况下我们对于指令encoding采取传统
     
     
     
-    
-    
-    
-    
     <div class="total-and-search">
         <div class="total-archive">
         Total : 7
@@ -647,6 +719,10 @@ PostEncoderMethodBackground一般情况下我们对于指令encoding采取传统
         <div class="sidebar-panel-tags">
     <div class="sidebar-tags-name">
     
+        <span class="sidebar-tag-name" data-tags="llvm-practice"><span class="iconfont-archer">&#xe606;</span>llvm-practice</span>
+    
+        <span class="sidebar-tag-name" data-tags="compiler"><span class="iconfont-archer">&#xe606;</span>compiler</span>
+    
         <span class="sidebar-tag-name" data-tags="llvm"><span class="iconfont-archer">&#xe606;</span>llvm</span>
     
         <span class="sidebar-tag-name" data-tags="Programming Language"><span class="iconfont-archer">&#xe606;</span>Programming Language</span>
@@ -655,9 +731,9 @@ PostEncoderMethodBackground一般情况下我们对于指令encoding采取传统
     
         <span class="sidebar-tag-name" data-tags="Compiler"><span class="iconfont-archer">&#xe606;</span>Compiler</span>
     
-        <span class="sidebar-tag-name" data-tags="Python"><span class="iconfont-archer">&#xe606;</span>Python</span>
-    
         <span class="sidebar-tag-name" data-tags="LLVM"><span class="iconfont-archer">&#xe606;</span>LLVM</span>
+    
+        <span class="sidebar-tag-name" data-tags="Python"><span class="iconfont-archer">&#xe606;</span>Python</span>
     
         <span class="sidebar-tag-name" data-tags="Swift"><span class="iconfont-archer">&#xe606;</span>Swift</span>
     
@@ -667,106 +743,9 @@ PostEncoderMethodBackground一般情况下我们对于指令encoding采取传统
     
         <span class="sidebar-tag-name" data-tags="Heterogeneous Computing"><span class="iconfont-archer">&#xe606;</span>Heterogeneous Computing</span>
     
-        <span class="sidebar-tag-name" data-tags="llvm-practice"><span class="iconfont-archer">&#xe606;</span>llvm-practice</span>
-    
-        <span class="sidebar-tag-name" data-tags="compiler"><span class="iconfont-archer">&#xe606;</span>compiler</span>
-    
         <span class="sidebar-tag-name" data-tags="小白"><span class="iconfont-archer">&#xe606;</span>小白</span>
     
     </div>
-    <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
-    <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
-    缺失模块。<br/>
-    1、请确保node版本大于6.2<br/>
-    2、在博客根目录（注意不是archer根目录）执行以下命令：<br/>
-    <span style="color: #f75357; font-size: 1rem; line-height: 2rem;">npm i hexo-generator-json-content --save</span><br/>
-    3、在根目录_config.yml里添加配置：
-    <pre style="color: #787878; font-size: 0.6rem;">
-jsonContent:
-  meta: false
-  pages: false
-  posts:
-    title: true
-    date: true
-    path: true
-    text: false
-    raw: false
-    content: false
-    slug: false
-    updated: false
-    comments: false
-    link: false
-    permalink: false
-    excerpt: false
-    categories: true
-    tags: true</pre>
-    </div> 
-    <div class="sidebar-tags-list"></div>
-</div>
-        <div class="sidebar-panel-categories">
-    <div class="sidebar-categories-name">
-    
-    </div>
-    <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
-    <div class="sidebar-categories-list"></div>
-</div>
-    </div>
-</div> 
-    <script>
-    var siteMeta = {
-        root: "/",
-        author: "Chino Mars"
-    }
-</script>
-    <!-- CDN failover -->
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
-    <script type="text/javascript">
-        if (typeof window.$ === 'undefined')
-        {
-            console.warn('jquery load from jsdelivr failed, will load local script')
-            document.write('<script src="/lib/jquery.min.js">\x3C/script>')
-        }
-    </script>
-    <script src="/scripts/main.js"></script>
-    <!-- algolia -->
-    
-        <div class="site-search">
-  <div class="algolia-popup popup">
-    <div class="algolia-search">
-      <div class="algolia-search-input-icon">
-        <i class="fa fa-search"></i>
-      </div>
-      <div class="algolia-search-input" id="algolia-search-input"></div>
-    </div>
-
-    <div class="algolia-results">
-      <div id="algolia-stats"></div>
-      <div id="algolia-hits"></div>
-      <div id="algolia-pagination" class="algolia-pagination"></div>
-    </div>
-
-    <span class="popup-btn-close">
-      <i class="iconfont-archer">&#xe609;</i>
-    </span>
-  </div>
-</div>
-        <script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.8.0/dist/instantsearch.min.js" defer></script>
-        <script src="/scripts/search.js" defer></script>
-    
-    <!-- busuanzi  -->
-    
-    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
-    
-    <!-- CNZZ  -->
-    
-    </div>
-    <!-- async load share.js -->
-     
-    </body>
-</html>
-
-
-iv>
     <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
     <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
     缺失模块。<br/>

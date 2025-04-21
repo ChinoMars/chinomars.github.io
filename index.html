@@ -382,13 +382,8 @@ height:50vh;
         <div class="abstract-content">
             
 
-LLVM Backend Practices - Part 1Register definition寄存器定义方面，目前想到这几点：
-
-lanebitmask length limitation for subregister definition
-register pressure calculation
-
-What is “LaneBitmask”llvm中使用LaneBitmask来表示一个物理寄存器的subregister的占用情况。
-PostEncoderMethodBackground一般情况下我们对于指令encoding采取传统的在指令定义的tablegen文件里，设置...
+LLVM Backend Practices - Part 1PostEncoderMethodBackground一般情况下我们对于指令encoding采取传统的在指令定义的tablegen文件里，设置好指令的field mapping即可，如果新一代指令集有新指令，则定义新的Inst和fieldmap类即可。
+在实际项目中，我们遇到过这种情况：架构演进过程中，每代之间指令功能变动不大，但指令encoding变动频繁，此外encoding采取的并不是顺序编码，而是逐bit的映射，目的是为了获取一定的指令shrink机会，即可变长指令。这里先不展开讨论shrink，而是着重讨论我们是...
         </div>
         <div class="abstract-post-meta">
             <!-- date  -->
@@ -399,11 +394,11 @@ PostEncoderMethodBackground一般情况下我们对于指令encoding采取传统
             
             <div class= abstract-tags >
     
-        <a class="post-tag" href="javascript:void(0);" data-tags = "llvm">llvm</a>
-    
         <a class="post-tag" href="javascript:void(0);" data-tags = "llvm-practice">llvm-practice</a>
     
         <a class="post-tag" href="javascript:void(0);" data-tags = "compiler">compiler</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "llvm">llvm</a>
     
 </div>
             
@@ -876,10 +871,6 @@ IPython：Python的交互式解释器，底层也是通过调用CPython对代码
     
     
     
-    
-    
-    
-    
     <div class="total-and-search">
         <div class="total-archive">
         Total : 7
@@ -967,6 +958,10 @@ IPython：Python的交互式解释器，底层也是通过调用CPython对代码
         <div class="sidebar-panel-tags">
     <div class="sidebar-tags-name">
     
+        <span class="sidebar-tag-name" data-tags="llvm-practice"><span class="iconfont-archer">&#xe606;</span>llvm-practice</span>
+    
+        <span class="sidebar-tag-name" data-tags="compiler"><span class="iconfont-archer">&#xe606;</span>compiler</span>
+    
         <span class="sidebar-tag-name" data-tags="llvm"><span class="iconfont-archer">&#xe606;</span>llvm</span>
     
         <span class="sidebar-tag-name" data-tags="Programming Language"><span class="iconfont-archer">&#xe606;</span>Programming Language</span>
@@ -975,9 +970,9 @@ IPython：Python的交互式解释器，底层也是通过调用CPython对代码
     
         <span class="sidebar-tag-name" data-tags="Compiler"><span class="iconfont-archer">&#xe606;</span>Compiler</span>
     
-        <span class="sidebar-tag-name" data-tags="Python"><span class="iconfont-archer">&#xe606;</span>Python</span>
-    
         <span class="sidebar-tag-name" data-tags="LLVM"><span class="iconfont-archer">&#xe606;</span>LLVM</span>
+    
+        <span class="sidebar-tag-name" data-tags="Python"><span class="iconfont-archer">&#xe606;</span>Python</span>
     
         <span class="sidebar-tag-name" data-tags="Swift"><span class="iconfont-archer">&#xe606;</span>Swift</span>
     
@@ -986,10 +981,6 @@ IPython：Python的交互式解释器，底层也是通过调用CPython对代码
         <span class="sidebar-tag-name" data-tags="Debugging"><span class="iconfont-archer">&#xe606;</span>Debugging</span>
     
         <span class="sidebar-tag-name" data-tags="Heterogeneous Computing"><span class="iconfont-archer">&#xe606;</span>Heterogeneous Computing</span>
-    
-        <span class="sidebar-tag-name" data-tags="llvm-practice"><span class="iconfont-archer">&#xe606;</span>llvm-practice</span>
-    
-        <span class="sidebar-tag-name" data-tags="compiler"><span class="iconfont-archer">&#xe606;</span>compiler</span>
     
         <span class="sidebar-tag-name" data-tags="小白"><span class="iconfont-archer">&#xe606;</span>小白</span>
     
